@@ -151,8 +151,7 @@ CREATE TABLE IF NOT EXISTS routine_execution (
     previous_routine_execution UUID REFERENCES routine_execution (uuid) ON DELETE SET DEFAULT DEFAULT NULL,
     created TIMESTAMP DEFAULT now(),
     ended TIMESTAMP DEFAULT NULL,
-    deleted BOOLEAN DEFAULT FALSE,
-    CONSTRAINT unique_routine_execution_constraint UNIQUE (server_id, created)
+    deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE INDEX IF NOT EXISTS previous_routine_execution ON routine_execution(previous_routine_execution);

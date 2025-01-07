@@ -29,9 +29,9 @@ export default class DatabaseClient extends GraphServerClient {
     this.pool = new Pool( {
       host: 'localhost',
       port: 5432,
-      user: 'emil',
-      password: '03gibnEF',
-      database: 'processing_graph_test',
+      user: 'postgres',
+      password: 'password',
+      database: 'postgres',
       min: 2,
       max: 5,
     } );
@@ -109,13 +109,13 @@ export default class DatabaseClient extends GraphServerClient {
 
   async addAgent( data: AnyObject ) {
     const userAgent = await this.query(
-      `WITH input_rows(name, description, created) AS (VALUES ($1, $2, $3)), 
-     ins AS (INSERT INTO agent (name, description, created) SELECT * FROM input_rows ON CONFLICT ON CONSTRAINT unique_agent DO NOTHING RETURNING uuid) 
+      `WITH input_rows(name, description) AS (VALUES ($1, $2)), 
+     ins AS (INSERT INTO agent (name, description) SELECT * FROM input_rows ON CONFLICT ON CONSTRAINT unique_agent DO NOTHING RETURNING uuid) 
         SELECT 'i' as source, uuid FROM ins
         UNION ALL
         SELECT 's' AS source, a.uuid FROM input_rows
-        JOIN agent a USING (name, description, created);`,
-      [ data.__name, data.__description, this.formatTimestamp( Date.now() ) ],
+        JOIN agent a USING (name, description);`,
+      [ data.__name, data.__description ],
     );
 
     data.__agentId = userAgent.rows[ 0 ]?.[ 'uuid' ];
