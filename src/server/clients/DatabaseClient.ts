@@ -109,13 +109,13 @@ export default class DatabaseClient extends GraphServerClient {
 
   async addAgent( data: AnyObject ) {
     const userAgent = await this.query(
-      `WITH input_rows(name, description) AS (VALUES ($1, $2)), 
-     ins AS (INSERT INTO agent (name, description) SELECT * FROM input_rows ON CONFLICT ON CONSTRAINT unique_agent DO NOTHING RETURNING uuid) 
+      `WITH input_rows(name, description, created) AS (VALUES ($1, $2, $3)), 
+     ins AS (INSERT INTO agent (name, description, created) SELECT * FROM input_rows ON CONFLICT ON CONSTRAINT unique_agent DO NOTHING RETURNING uuid) 
         SELECT 'i' as source, uuid FROM ins
         UNION ALL
         SELECT 's' AS source, a.uuid FROM input_rows
-        JOIN agent a USING (name, description);`,
-      [ data.__name, data.__description ],
+        JOIN agent a USING (name, description, created);`,
+      [ data.__name, data.__description, this.formatTimestamp( Date.now() ) ],
     );
 
     data.__agentId = userAgent.rows[ 0 ]?.[ 'uuid' ];
@@ -131,8 +131,8 @@ export default class DatabaseClient extends GraphServerClient {
       );
 
       await client.query(
-        `INSERT INTO contract as c (uuid, agent_id, context, product, issued_at) VALUES ($1, $2, $3, $4, $5);`,
-        [ _data.__contractId, _data.__agentId, _data.__contextId, _data.__name, this.formatTimestamp( _data.__contractIssueTime ) ],
+        `INSERT INTO contract as c (uuid, agent_id, context, product, issued_at, created) VALUES ($1, $2, $3, $4, $5, $6);`,
+        [ _data.__contractId, _data.__agentId, _data.__contextId, _data.__name, this.formatTimestamp( _data.__contractIssueTime ), this.formatTimestamp( _data.__contractIssueTime ) ],
       );
 
       return _data;
@@ -193,22 +193,22 @@ export default class DatabaseClient extends GraphServerClient {
       await client.query( query ); // Set up database
 
       const res = await client.query(
-        `INSERT INTO processing_graph as p (name, description) VALUES ($1, $2)
+        `INSERT INTO processing_graph as p (name, description, created) VALUES ($1, $2, $3)
                                                 ON CONFLICT ON CONSTRAINT processing_graph_pkey DO UPDATE SET description = $2, modified = DEFAULT
                                                 WHERE p.name = $1
                                                 RETURNING p.name;`,
-        [ _data.__name, _data.__description ],
+        [ _data.__name, _data.__description, this.formatTimestamp( Date.now() ) ],
       );
 
       const pgId = res.rows[ 0 ].name;
 
       const server = await client.query(
-        `INSERT INTO server as s (processing_graph, address, port, process_pid, is_primary) VALUES ($1, $2, $3, $4, $5) 
+        `INSERT INTO server as s (processing_graph, address, port, process_pid, is_primary, created) VALUES ($1, $2, $3, $4, $5, $6) 
                                                     ON CONFLICT ON CONSTRAINT unique_server_constraint 
                                                         DO UPDATE SET processing_graph = $1, modified = DEFAULT
                                                     WHERE s.address = $2 AND s.port = $3
                                                     RETURNING s.uuid;`,
-        [ pgId, _data.__address, _data.__port, _data.__pid, _data.__isPrimary ],
+        [ pgId, _data.__address, _data.__port, _data.__pid, _data.__isPrimary, this.formatTimestamp( Date.now() ) ],
       );
 
       _data.__serverId = server.rows[ 0 ][ 'uuid' ];
@@ -349,8 +349,9 @@ export default class DatabaseClient extends GraphServerClient {
           concurrency,
           is_unique,
           layer_index,
-          function_string
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7) 
+          function_string,
+          created
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
           ON CONFLICT ON CONSTRAINT unique_task_constraint
               DO UPDATE SET ( description, concurrency, is_unique, layer_index ) = ( $2, $4, $5, $6 )
           WHERE t.name = $1 AND t.processing_graph = $3 AND t.function_string = $7
@@ -363,6 +364,7 @@ export default class DatabaseClient extends GraphServerClient {
             taskDescriptor.__isUnique,
             taskDescriptor.__layerIndex,
             taskDescriptor.__functionString,
+            this.formatTimestamp( Date.now() ),
           ],
         );
 
@@ -386,11 +388,12 @@ export default class DatabaseClient extends GraphServerClient {
         const taskDescriptor = task.export();
         for ( const predecessorId of taskDescriptor.__previousTasks ) {
           await client.query(
-            `INSERT INTO directional_task_graph_map(task_id, predecessor_task_id) 
-            VALUES ($1, $2) ON CONFLICT DO NOTHING;`,
+            `INSERT INTO directional_task_graph_map(task_id, predecessor_task_id, created) 
+            VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;`,
             [
               taskDescriptor.__id,
               predecessorId,
+              this.formatTimestamp( Date.now() ),
             ],
           );
         }
@@ -414,12 +417,12 @@ export default class DatabaseClient extends GraphServerClient {
     const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
       GraphRegistry.instance.forEachRoutine( async ( routine: GraphRoutine ) => {
         const routineRegistry = await client.query(
-          `INSERT INTO routine AS r (name, description, processing_graph)
-           VALUES ($1, $2, $3) 
+          `INSERT INTO routine AS r (name, description, processing_graph, created)
+           VALUES ($1, $2, $3, $4) 
            ON CONFLICT ON CONSTRAINT unique_routine_constraint DO UPDATE SET description = $2
            WHERE r.name = $1 AND r.processing_graph = $3
            RETURNING r.uuid;`,
-          [routine.name, routine.description, _data.__pgId],
+          [routine.name, routine.description, _data.__pgId, this.formatTimestamp( Date.now() )],
         );
 
         const routineId = routineRegistry.rows[ 0 ][ 'uuid' ];
@@ -431,9 +434,9 @@ export default class DatabaseClient extends GraphServerClient {
             const nextTask = iterator.next();
             if ( nextTask ) {
               await client.query(
-                `INSERT INTO task_to_routine_map(task_id, routine_id) VALUES ($1, $2) ON CONFLICT 
+                `INSERT INTO task_to_routine_map(task_id, routine_id, created) VALUES ($1, $2, $3) ON CONFLICT 
                     ON CONSTRAINT task_to_routine_map_pkey DO NOTHING;`,
-                [ nextTask.id, routineId ],
+                [ nextTask.id, routineId, this.formatTimestamp( Date.now() ) ],
               );
             }
           }
@@ -478,10 +481,10 @@ export default class DatabaseClient extends GraphServerClient {
       }
 
       await this.query(
-        `INSERT INTO routine_execution(uuid, server_id, routine_id, description, previous_routine_execution) VALUES ($1, $2, $3, $4, $5) 
+        `INSERT INTO routine_execution(uuid, server_id, routine_id, description, previous_routine_execution, created) VALUES ($1, $2, $3, $4, $5, $6) 
                                                                                                     ON CONFLICT ON CONSTRAINT routine_execution_pkey
                                                                                                         DO NOTHING;`,
-        [ data.__graphId, self.__serverId, data.__routineId, data.__routineName, data.__previousRoutineExecution ],
+        [ data.__graphId, self.__serverId, data.__routineId, data.__routineName, data.__previousRoutineExecution, this.formatTimestamp( Date.now() ) ],
       );
 
       this.forwardToServer( 'Added routine execution to database', data );
@@ -551,9 +554,9 @@ export default class DatabaseClient extends GraphServerClient {
       );
 
       await client.query(
-        `INSERT INTO task_execution(uuid, routine_execution_id, task_id, context_id) VALUES ($1, $2, $3, $4) 
+        `INSERT INTO task_execution(uuid, routine_execution_id, task_id, context_id, created) VALUES ($1, $2, $3, $4, $5) 
          ON CONFLICT ON CONSTRAINT task_execution_pkey DO NOTHING;`,
-        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id ],
+        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id, this.formatTimestamp( Date.now() ) ],
       );
 
       for ( const prevId of data.__previousNodes ) {
