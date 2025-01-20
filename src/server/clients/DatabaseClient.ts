@@ -490,10 +490,19 @@ export default class DatabaseClient extends GraphServerClient {
         );
 
         await client.query(
-          `INSERT INTO routine_execution(uuid, server_id, routine_id, description, previous_routine_execution, contract_id, created) VALUES ($1, $2, $3, $4, $5, $6, $7) 
-                                                                                                    ON CONFLICT ON CONSTRAINT routine_execution_pkey
-                                                                                                        DO NOTHING;`,
-          [ _data.__graphId, self.__serverId, _data.__routineId, _data.__routineName, _data.__previousRoutineExecution, _data.__contractId, this.formatTimestamp( _data.__scheduled ) ],
+          `INSERT INTO routine_execution(
+            uuid, server_id, routine_id, description, previous_routine_execution, contract_id, created, context_id
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT ON CONSTRAINT routine_execution_pkey DO NOTHING;`,
+          [
+            _data.__graphId,
+            self.__serverId,
+            _data.__routineId,
+            _data.__routineName,
+            _data.__previousRoutineExecution,
+            _data.__contractId,
+            this.formatTimestamp( _data.__scheduled ),
+            _data.__context.__id,
+          ],
         );
 
         return _data;
@@ -540,8 +549,8 @@ export default class DatabaseClient extends GraphServerClient {
       );
 
       await client.query(
-        `UPDATE routine_execution AS re SET errored = $1, failed = $2 WHERE re.uuid = $3;`,
-        [ !!data.__errored, !!data.__failed, data.__graphId ],
+        `UPDATE routine_execution AS re SET errored = $1, failed = $2, result_context_id = $3 WHERE re.uuid = $4;`,
+        [ !!_data.__errored, !!_data.__failed, _data.__context.__id, _data.__graphId ],
       );
 
       return _data;
@@ -565,8 +574,8 @@ export default class DatabaseClient extends GraphServerClient {
       );
 
       await client.query(
-        `UPDATE routine_execution AS re SET is_running = FALSE, is_complete = TRUE, progress = 1.00, ended = $1 WHERE re.uuid = $2;`,
-        [ this.formatTimestamp( data.__executionStart + data.__executionTime ), data.__graphId ],
+        `UPDATE routine_execution AS re SET is_running = FALSE, is_complete = TRUE, progress = 1.00, ended = $1, result_context_id = $2 WHERE re.uuid = $3;`,
+        [ this.formatTimestamp( _data.__executionStart + _data.__executionTime ), _data.__context.__id, _data.__graphId ],
       );
 
       return _data;
