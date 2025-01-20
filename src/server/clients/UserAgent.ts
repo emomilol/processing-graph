@@ -21,6 +21,7 @@ export default class UserAgent extends GraphServerClient {
   private id: string = '';
   private name: string = 'Processing graph agent';
   private description: string = '';
+  private contractToRecordedPromise: { [ id: string ]: ResolveFunction } = {};
   private idToResolve: { [ id: string ]: ResolveFunction } = {};
   private idToReject: { [ id: string ]: ResolveFunction } = {};
   private idToContractId: { [ id: string ]: string } = {};
@@ -49,9 +50,14 @@ export default class UserAgent extends GraphServerClient {
     this.description = description;
   }
 
+  onContractRecorded( data: AnyObject ) {
+    this.contractToRecordedPromise[ data.__contractId ]?.( data );
+    delete this.contractToRecordedPromise[ data.__contractId ];
+  }
+
   async newContract( name: string, context: AnyObject ): Promise<AnyObject> {
-    const contractId = uuid();
     const contractIssueTime = Date.now();
+    const contractId = uuid();
 
     this.forwardToServer( 'Agent received request', {
       __contractId: contractId,
@@ -60,6 +66,10 @@ export default class UserAgent extends GraphServerClient {
       __context: context,
       __contextId: uuid(),
       __contractIssueTime: contractIssueTime,
+    } );
+
+    const contractRecordedPromise = new Promise<AnyObject>( async ( resolve) => {
+      this.contractToRecordedPromise[ contractId ] = resolve;
     } );
 
     const request = name.split( ':' );
@@ -88,7 +98,10 @@ export default class UserAgent extends GraphServerClient {
       __taskName: `Deputy task for "${ routine }"`,
       __userProcessId: processId,
       __isClient: true,
+      __contractId: contractId,
     };
+
+    await contractRecordedPromise;
 
     this.forwardToServer( 'Agent issued new contract', ctx );
 
@@ -101,8 +114,6 @@ export default class UserAgent extends GraphServerClient {
   resolveProcess( data: AnyObject ) {
     const context = GraphContextFactory.instance.getContext( data );
     const result = context.getContext();
-
-    console.log( 'resolveProcess', data, this.idToResolve );
 
     if ( data.__error ) {
       this.idToReject[ data.__userProcessId ]( { error: 'Request failed.' } );

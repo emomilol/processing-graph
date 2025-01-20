@@ -139,6 +139,8 @@ CREATE TABLE IF NOT EXISTS routine_execution (
     server_id UUID REFERENCES server(uuid) ON DELETE NO ACTION NOT NULL,
     routine_id UUID REFERENCES routine(uuid) ON DELETE NO ACTION DEFAULT NULL,
     contract_id UUID REFERENCES contract(uuid) ON DELETE NO ACTION DEFAULT NULL,
+    context_id UUID REFERENCES context(uuid) ON DELETE NO ACTION NOT NULL,
+    result_context_id UUID REFERENCES context(uuid) ON DELETE NO ACTION DEFAULT NULL,
     description TEXT NOT NULL,
     is_scheduled BOOLEAN DEFAULT TRUE,
     is_running BOOLEAN DEFAULT FALSE,

@@ -16,7 +16,7 @@ export default class GraphAsyncRun extends GraphRunState {
     super.addNode( node );
 
     if ( !this.initiated ) {
-      this.context?.report( 'Scheduled node', { ...node.lightExport() } );
+      this.context?.report( 'Scheduled node', { ...node.lightExport(), __scheduled: Date.now() } );
       this.context?.setNext( this.graphBuilder.getResult() as unknown as ExecutionChain );
       this.initiated = true;
     }

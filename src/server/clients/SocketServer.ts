@@ -110,10 +110,10 @@ export default class SocketServer extends Api {
   }
 
   resolveCallback( data: AnyObject ) {
-    const callback = this.pendingCallbacks[ data.__context?.__context?.__graphId ];
+    const context = GraphContextFactory.instance.getContextById( data.__context.__id );
+    const metaData = context.getMetaData();
+    const callback = this.pendingCallbacks[ metaData?.__graphId ];
     if ( callback ) {
-      const context = GraphContextFactory.instance.getContextById( data.__context.__id );
-      const metaData = context.getMetaData();
       const contextData = context.getContext();
       const responseData = { ...contextData, ...( metaData.__metaData ?? metaData ) };
       callback( responseData );

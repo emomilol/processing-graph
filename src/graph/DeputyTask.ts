@@ -39,6 +39,7 @@ export default class DeputyTask extends Task {
         this.manager?.processRemoteTask( {
           __taskName: this.deputyTaskName,
           __pgId: this.processingGraphName,
+          __contractId: metaData.__contractId ?? null,
           __metaData: {
             ...metaData,
             __deputyTaskId: this.id,

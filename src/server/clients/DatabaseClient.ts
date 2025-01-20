@@ -480,14 +480,26 @@ export default class DatabaseClient extends GraphServerClient {
         }
       }
 
-      await this.query(
-        `INSERT INTO routine_execution(uuid, server_id, routine_id, description, previous_routine_execution, created) VALUES ($1, $2, $3, $4, $5, $6) 
+      const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
+        await client.query(
+          `INSERT INTO context (uuid, context) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT context_pkey DO NOTHING;`,
+          [
+            _data.__context.__id,
+            _data.__context.__context
+          ],
+        );
+
+        await client.query(
+          `INSERT INTO routine_execution(uuid, server_id, routine_id, description, previous_routine_execution, contract_id, created) VALUES ($1, $2, $3, $4, $5, $6, $7) 
                                                                                                     ON CONFLICT ON CONSTRAINT routine_execution_pkey
                                                                                                         DO NOTHING;`,
-        [ data.__graphId, self.__serverId, data.__routineId, data.__routineName, data.__previousRoutineExecution, this.formatTimestamp( Date.now() ) ],
-      );
+          [ _data.__graphId, self.__serverId, _data.__routineId, _data.__routineName, _data.__previousRoutineExecution, _data.__contractId, this.formatTimestamp( _data.__scheduled ) ],
+        );
 
-      this.forwardToServer( 'Added routine execution to database', data );
+        return _data;
+      } );
+
+      this.forwardToServer( 'Added routine execution to database', updatedData );
     }
   }
 
@@ -518,12 +530,24 @@ export default class DatabaseClient extends GraphServerClient {
       return;
     }
 
-    await this.query(
-      `UPDATE routine_execution AS re SET errored = $1, failed = $2 WHERE re.uuid = $3;`,
-      [ !!data.__errored, !!data.__failed, data.__graphId ],
-    );
+    const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
+      await client.query(
+        `INSERT INTO context (uuid, context) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT context_pkey DO NOTHING;`,
+        [
+          _data.__context.__id,
+          _data.__context.__context
+        ],
+      );
 
-    this.forwardToServer( 'Updated graph errored status on database', data );
+      await client.query(
+        `UPDATE routine_execution AS re SET errored = $1, failed = $2 WHERE re.uuid = $3;`,
+        [ !!data.__errored, !!data.__failed, data.__graphId ],
+      );
+
+      return _data;
+    } );
+
+    this.forwardToServer( 'Updated graph errored status on database', updatedData );
   }
 
   async graphComplete( data: AnyObject ) {
@@ -531,12 +555,24 @@ export default class DatabaseClient extends GraphServerClient {
       return;
     }
 
-    await this.query(
-      `UPDATE routine_execution AS re SET is_running = FALSE, is_complete = TRUE, progress = 1.00, ended = $1 WHERE re.uuid = $2;`,
-      [ this.formatTimestamp( data.__executionStart + data.__executionTime ), data.__graphId ],
-    );
+    const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
+      await client.query(
+        `INSERT INTO context (uuid, context) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT context_pkey DO NOTHING;`,
+        [
+          _data.__context.__id,
+          _data.__context.__context
+        ],
+      );
 
-    this.forwardToServer( 'Updated graph completed state on database', data );
+      await client.query(
+        `UPDATE routine_execution AS re SET is_running = FALSE, is_complete = TRUE, progress = 1.00, ended = $1 WHERE re.uuid = $2;`,
+        [ this.formatTimestamp( data.__executionStart + data.__executionTime ), data.__graphId ],
+      );
+
+      return _data;
+    } );
+
+    this.forwardToServer( 'Updated graph completed state on database', updatedData );
   }
 
   async addNode( data: AnyObject ) {
@@ -556,7 +592,7 @@ export default class DatabaseClient extends GraphServerClient {
       await client.query(
         `INSERT INTO task_execution(uuid, routine_execution_id, task_id, context_id, created) VALUES ($1, $2, $3, $4, $5) 
          ON CONFLICT ON CONSTRAINT task_execution_pkey DO NOTHING;`,
-        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id, this.formatTimestamp( Date.now() ) ],
+        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id, this.formatTimestamp( _data.__scheduled ) ],
       );
 
       for ( const prevId of data.__previousNodes ) {

@@ -77,14 +77,14 @@ export default class GraphNode implements Graph {
   }
 
   start() {
-    if ( !this.executionStart ) {
+    if ( this.executionStart === 0 ) {
       this.executionStart = Date.now();
     }
     return this.executionStart;
   }
 
   end() {
-    if ( !this.executionStart ) {
+    if ( this.executionStart === 0 ) {
       return 0;
     }
 
@@ -217,7 +217,7 @@ export default class GraphNode implements Graph {
 
   public consume( node: GraphNode ) {
     this.context = this.context.combine( node.context );
-    this.previousNodes.concat( node.previousNodes );
+    this.previousNodes = this.previousNodes.concat( node.previousNodes );
     node.completeSubgraph();
     node.changeIdentity( this.id );
     node.destroy();

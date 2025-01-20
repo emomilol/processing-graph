@@ -86,7 +86,7 @@ export default abstract class GraphLayer extends ExecutionChain implements Graph
       return -1;
     } );
 
-    this.report( 'Scheduled node', { ...node.lightExport() } );
+    this.report( 'Scheduled node', { ...node.lightExport(), __scheduled: Date.now() } );
   }
 
   start() {

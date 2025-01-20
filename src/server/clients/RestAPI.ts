@@ -63,10 +63,9 @@ export default class RestAPI extends Api {
   dispatch( data: AnyObject, action: string = 'json' ) {
     const context = GraphContextFactory.instance.getContextById( data.__context.__id );
     const metaData = context.getMetaData();
-    const contextData = context.getContext();
     const response = this.idToResponse[ metaData.__responseId ];
-    console.log( metaData.__responseId, metaData );
     if ( response ) {
+      const contextData = context.getContext();
       const responseData = { ...contextData, ...( metaData.__metaData ?? metaData ) };
       ( response as any )[ action ]( responseData ); // TODO typing
       delete this.idToResponse[ metaData.__responseId ];

@@ -65,11 +65,13 @@ export default class DatabaseMessageHandler extends MessageHandler {
         server.dispatch( data, 'userAgent', 'setIdentity' );
         break;
 
+      case 'Contract added to database':
+        server.dispatch( data, 'userAgent', 'onContractRecorded' );
+
       case 'Got server':
       case 'Added new instance':
       case 'Error database':
       case 'Node added to database':
-      case 'Contract added to database':
       case 'Contract fulfilled status updated on database':
       case 'Added routine execution to database':
       case 'Updated graph progress on database':

@@ -74,23 +74,24 @@ export default class GraphRunner extends GraphServerClient {
 
     this.nextStaticGraph.push( ..._tasks as Task[] );
 
-    console.log( context );
+    const ctx = GraphContextFactory.instance.getContext( context );
 
     const graphId = context.__graphId ?? uuid();
     const data = {
       __graphId: graphId,
       __routineName: routineName,
       __routineId: routineId,
+      __context: ctx.export(),
       __previousRoutineExecution: context.__metaData?.__graphId ?? null,
+      __contractId: context.__metaData?.__contractId ?? context.__contractId ?? null,
       __task: {
         __name: routineName,
-      }
+      },
+      __scheduled: Date.now(),
     };
 
     GraphRegistry.instance.updateSelf( data );
     this.forwardToServer( 'New routine execution', data );
-
-    const ctx = GraphContextFactory.instance.getContext( context );
 
     for ( const task of _tasks as Task[] ) {
       this.nextRun.addNode( new GraphNode( task as Task, ctx, graphId ) );
