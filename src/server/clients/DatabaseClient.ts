@@ -492,7 +492,7 @@ export default class DatabaseClient extends GraphServerClient {
         await client.query(
           `INSERT INTO routine_execution(
             uuid, server_id, routine_id, description, previous_routine_execution, contract_id, created, context_id
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT ON CONSTRAINT routine_execution_pkey DO NOTHING;`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT ON CONSTRAINT routine_execution_pkey DO NOTHING;`,
           [
             _data.__graphId,
             self.__serverId,
