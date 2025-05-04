@@ -31,6 +31,12 @@ jobs:
       - name: Build package
         run: yarn build
 
+      - name: Check NPM_TOKEN length
+        run:
+          echo "Token length: ${#NPM_TOKEN}"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Release with semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
