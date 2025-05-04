@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/emomilol/processing-graph/compare/v1.0.0...v1.0.1) (2025-05-04)
+
+
+### Bug Fixes
+
+* Fixed package.json mismatch ([3ab21af](https://github.com/emomilol/processing-graph/commit/3ab21af5ffea80e2e85b20508d60aa18789e6472))
+
 # 1.0.0 (2025-05-04)
 
 
