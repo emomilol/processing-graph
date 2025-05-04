@@ -60,8 +60,8 @@ export default class GraphClient extends EventBroker {
   }
 
   setOptions( options: ServerOptions ) {
-    this.loadBalance = options.loadBalance;
-    this.useSocket = options.useSocket;
+    this.loadBalance = options.loadBalance ?? this.loadBalance;
+    this.useSocket = options.useSocket ?? this.useSocket;
   }
 
   connect() {
