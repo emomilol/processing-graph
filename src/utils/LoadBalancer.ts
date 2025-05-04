@@ -1,5 +1,5 @@
-import { AnyObject } from '../../types/global';
-import GraphRegistry from '../GraphRegistry';
+import { AnyObject } from '../types/global';
+import GraphRegistry from '../server/GraphRegistry';
 
 
 export default class LoadBalancer {

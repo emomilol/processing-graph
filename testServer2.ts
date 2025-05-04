@@ -1,6 +1,6 @@
-import ProcessingGraph from './src/ProcessingGraph';
+import ProcessingGraph from './src/graph/ProcessingGraph';
 import Task from './src/graph/Task';
-import { AnyObject } from './types/global';
+import { AnyObject } from './src/types/global';
 
 
 async function asyncTaskFunction( context: AnyObject ) {

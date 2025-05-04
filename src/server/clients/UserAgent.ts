@@ -1,6 +1,6 @@
 import GraphServerClient from '../../interfaces/GraphServerClient';
-import { AnyObject } from '../../../types/global';
-import ProcessingGraph from '../../ProcessingGraph';
+import { AnyObject } from '../../types/global';
+import ProcessingGraph from '../../graph/ProcessingGraph';
 import { v4 as uuid } from 'uuid';
 import GraphContextFactory from '../../context/GraphContextFactory';
 import DeputyTask from '../../graph/DeputyTask';

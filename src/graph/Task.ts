@@ -3,18 +3,23 @@ import GraphContext from '../context/GraphContext';
 import GraphVisitor from '../interfaces/GraphVisitor';
 import TaskIterator from '../iterators/TaskIterator';
 import Graph from '../interfaces/Graph';
-import GraphRegistry from '../GraphRegistry';
+import GraphRegistry from '../server/GraphRegistry';
 
 export type TaskFunction = ( context: any ) => TaskResult;
 export type TaskResult = boolean | string | object | Generator | Promise<any>;
 
-
-
-export interface ProcessingTask {
+export interface TaskType {
   id: string;
   name: string;
-  layerIndex: number;
+  description: string;
   doAfter: ( ...tasks: ProcessingTask[] ) => void;
+  doOnFail: ( ...tasks: Task[] ) => void;
+  process: ( context: GraphContext ) => TaskResult;
+  export: () => ProcessingTaskSnapshot;
+}
+
+export interface ProcessingTask extends TaskType {
+  layerIndex: number;
   destroy: () => void;
 }
 
@@ -134,7 +139,7 @@ export default class Task implements ProcessingTask, Graph {
     task.nextTasks.splice( task.nextTasks.indexOf( this ), 1 );
   }
 
-  export(): ProcessingTaskSnapshot {
+  public export(): ProcessingTaskSnapshot {
     return {
       __id: this.id,
       __name: this.name,
@@ -149,11 +154,11 @@ export default class Task implements ProcessingTask, Graph {
     };
   }
 
-  getIterator() {
+  public getIterator() {
     return new TaskIterator( this );
   }
 
-  accept( visitor: GraphVisitor ) {
+  public accept( visitor: GraphVisitor ) {
     visitor.visitTask( this );
   }
 

@@ -1,5 +1,5 @@
 import GraphContext from './GraphContext';
-import { AnyObject } from '../../types/global';
+import { AnyObject } from '../types/global';
 
 export default class GraphContextFactory {
   private cache: { [ value: string | number ]: Set<GraphContext> } = {};

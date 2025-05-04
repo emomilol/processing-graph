@@ -1,8 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import GraphServerClient from '../../interfaces/GraphServerClient';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import DeputyTask from '../../graph/DeputyTask';
-import GraphRegistry, { DeputyDescriptor } from '../../GraphRegistry';
+import GraphRegistry, { DeputyDescriptor } from '../GraphRegistry';
 import LoadBalancer from '../../utils/LoadBalancer';
 
 

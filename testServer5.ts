@@ -1,6 +1,6 @@
-import ProcessingGraph from './src/ProcessingGraph';
+import ProcessingGraph from './src/graph/ProcessingGraph';
 import Task from './src/graph/Task';
-import { AnyObject } from './types/global';
+import { AnyObject } from './src/types/global';
 
 
 async function asyncTaskFunction( context: AnyObject ) {
@@ -33,25 +33,25 @@ function failTaskFunction( context: AnyObject ) {
   return context;
 }
 
-function* splitTaskFunction( context: AnyObject ) {
-  const num = Math.floor( Math.random() * 10 );
-  for ( let i = 0; i < num; i++ ) {
-    yield { ...context, index: i };
-  }
-}
-
-async function joinFunction( context: AnyObject[] ) {
-  await new Promise( resolve => setTimeout( resolve, 1000 ) );
-  const newContext = { ...context[ 0 ] };
-  let count = 1;
-  for ( const ctx of context ) {
-    count += ctx.count;
-  }
-
-  newContext.count = count;
-
-  return newContext;
-}
+// function* splitTaskFunction( context: AnyObject ) {
+//   const num = Math.floor( Math.random() * 10 );
+//   for ( let i = 0; i < num; i++ ) {
+//     yield { ...context, index: i };
+//   }
+// }
+//
+// async function joinFunction( context: AnyObject[] ) {
+//   await new Promise( resolve => setTimeout( resolve, 1000 ) );
+//   const newContext = { ...context[ 0 ] };
+//   let count = 1;
+//   for ( const ctx of context ) {
+//     count += ctx.count;
+//   }
+//
+//   newContext.count = count;
+//
+//   return newContext;
+// }
 
 async function main() {
 

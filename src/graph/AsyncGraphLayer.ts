@@ -1,6 +1,6 @@
 import GraphNode from './GraphNode';
 import GraphLayer from '../interfaces/GraphLayer';
-import GraphRegistry from '../GraphRegistry';
+import GraphRegistry from '../server/GraphRegistry';
 
 
 export default class AsyncGraphLayer extends GraphLayer {

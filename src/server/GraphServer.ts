@@ -1,7 +1,7 @@
 import * as http from 'http';
 import { RequestListener, Server } from 'http';
 import EventBroker from '../interfaces/EventBroker';
-import ProcessingGraph from '../ProcessingGraph';
+import ProcessingGraph from '../graph/ProcessingGraph';
 import MessageHandler from '../interfaces/MessageHandler';
 import RestMessageHandler from './handlers/RestMessageHandler';
 import RunnerMessageHandler from './handlers/RunnerMessageHandler';
@@ -21,8 +21,9 @@ import GraphServerCluster from './GraphServerCluster';
 
 
 export interface ServerOptions {
-  loadBalance: boolean;
-  useSocket: boolean;
+  loadBalance?: boolean;
+  useSocket?: boolean;
+  log?: boolean;
 }
 
 export default class GraphServer extends EventBroker {
@@ -56,6 +57,7 @@ export default class GraphServer extends EventBroker {
 
   private loadBalance: boolean = true;
   private useSocket: boolean = true;
+  private log: boolean = false;
 
   protected handlers: MessageHandler[] = [
     RunnerMessageHandler.instance,
@@ -110,8 +112,9 @@ export default class GraphServer extends EventBroker {
   }
 
   setOptions( options: ServerOptions ) {
-    this.loadBalance = options.loadBalance;
-    this.useSocket = options.useSocket;
+    this.loadBalance = options.loadBalance ?? this.loadBalance;
+    this.useSocket = options.useSocket ?? this.useSocket;
+    this.log = options.log ?? this.log;
   }
 
   protected init() {

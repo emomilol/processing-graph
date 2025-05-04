@@ -1,7 +1,6 @@
 import MessageHandler from '../../interfaces/MessageHandler';
 import GraphServerClient from '../../interfaces/GraphServerClient';
-import FetchClient from '../clients/FetchClient';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import EventBroker from '../../interfaces/EventBroker';
 import DatabaseClient from '../clients/DatabaseClient';
 
@@ -67,6 +66,7 @@ export default class DatabaseMessageHandler extends MessageHandler {
 
       case 'Contract added to database':
         server.dispatch( data, 'userAgent', 'onContractRecorded' );
+        break;
 
       case 'Got server':
       case 'Added new instance':

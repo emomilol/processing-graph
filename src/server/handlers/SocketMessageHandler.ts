@@ -3,7 +3,7 @@ import EventBroker from '../../interfaces/EventBroker';
 import SocketServer from '../clients/SocketServer';
 import SocketClient from '../clients/SocketClient';
 import GraphServerClient from '../../interfaces/GraphServerClient';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 
 
 export default class SocketMessageHandler extends MessageHandler {

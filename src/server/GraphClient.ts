@@ -9,7 +9,7 @@ import SocketMessageHandler from './handlers/SocketMessageHandler';
 import { ServerOptions } from './GraphServer';
 import DeputyManager from './clients/DeputyManager';
 import DeputyMessageHandler from './handlers/DeputyMessageHandler';
-import ProcessingGraph from '../ProcessingGraph';
+import ProcessingGraph from '../graph/ProcessingGraph';
 import GraphRunner from '../runners/GraphRunner';
 import UserAgent from './clients/UserAgent';
 import UserAgentHandler from './handlers/UserAgentHandler';

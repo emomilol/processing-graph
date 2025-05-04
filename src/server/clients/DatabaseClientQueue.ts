@@ -1,4 +1,4 @@
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 
 
 type ActionFunction = ( data: AnyObject ) => Promise<void>;

@@ -1,5 +1,5 @@
 import EventBroker from './EventBroker';
-import { AnyObject } from '../../types/global';
+import { AnyObject } from '../types/global';
 import GraphServerClient from './GraphServerClient';
 
 

@@ -1,7 +1,7 @@
 import MessageHandler from '../../interfaces/MessageHandler';
 import RestAPI from '../clients/RestAPI';
 import EventBroker from '../../interfaces/EventBroker';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import GraphServerClient from '../../interfaces/GraphServerClient';
 
 

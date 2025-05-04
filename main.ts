@@ -1,4 +1,4 @@
-import ProcessingGraph from './src/ProcessingGraph';
+import ProcessingGraph from './src/index';
 import { sleep } from './src/utils/promise';
 
 

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { deepClone } from '../utils/tools';
-import { AnyObject } from '../../types/global';
+import { AnyObject } from '../types/global';
 import GraphContextFactory from './GraphContextFactory';
 
 export default class GraphContext {
@@ -60,21 +60,21 @@ export default class GraphContext {
     };
   }
 
-  private deepFreeze( object: any ) {
-    // Retrieve the property names defined on object
-    const propNames = Reflect.ownKeys( object );
-
-    // Freeze properties before freezing self
-    for ( const name of propNames ) {
-      const value = object[ name ];
-
-      if ( ( value && typeof value === 'object' ) || typeof value === 'function' ) {
-        this.deepFreeze( value );
-      }
-    }
-
-    return Object.freeze( object );
-  }
+  // private deepFreeze( object: any ) {
+  //   // Retrieve the property names defined on object
+  //   const propNames = Reflect.ownKeys( object );
+  //
+  //   // Freeze properties before freezing self
+  //   for ( const name of propNames ) {
+  //     const value = object[ name ];
+  //
+  //     if ( ( value && typeof value === 'object' ) || typeof value === 'function' ) {
+  //       this.deepFreeze( value );
+  //     }
+  //   }
+  //
+  //   return Object.freeze( object );
+  // }
 
   private removeMetaData( context: AnyObject ) {
     return deepClone( context, ( key ) => key.startsWith( '__' ) );

@@ -1,7 +1,7 @@
 import MessageHandler from '../../interfaces/MessageHandler';
 import GraphServerClient from '../../interfaces/GraphServerClient';
 import UserAgent from '../clients/UserAgent';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import EventBroker from '../../interfaces/EventBroker';
 
 

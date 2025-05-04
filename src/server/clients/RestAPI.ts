@@ -1,13 +1,13 @@
-import express, { Express, Request, response, Response } from 'express';
+import express, { Express, Request, Response } from 'express';
 import GraphServer from '../GraphServer';
 import Api from '../../interfaces/Api';
 import { v4 as uuid } from 'uuid';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import GraphRegistry from '../../GraphRegistry';
+import GraphRegistry from '../GraphRegistry';
 import GraphContextFactory from '../../context/GraphContextFactory';
+// import rateLimit from 'express-rate-limit';
 
 
 // The REST API is the gateway to this graph and to the whole network of graphs from outside sources.
@@ -38,10 +38,10 @@ export default class RestAPI extends Api {
       allowedHeaders: [ 'Content-Type' ],
     } ) );
     // Rate limiting to prevent brute-force attacks
-    const limiter = rateLimit( {
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // Limit each IP to 100 requests per window
-    } );
+    // const limiter = rateLimit( {
+    //   windowMs: 15 * 60 * 1000, // 15 minutes
+    //   limit: 100, // Limit each IP to 100 requests per window
+    // } );
     // this.app.use( limiter );
     // JSON body parser middleware
     this.app.use( express.json() );
@@ -75,7 +75,7 @@ export default class RestAPI extends Api {
 
   private runGraph( req: Request, res: Response ) {
     if ( this.schema ) {
-      const { error, value } = this.schema.validate( req.body );
+      const { error } = this.schema.validate( req.body );
       if ( error ) return res.status( 400 ).json( { __error: error.details[0].message } ); // TODO dont send the error message in production
     }
 
@@ -88,7 +88,7 @@ export default class RestAPI extends Api {
     this.forwardToServer( 'Run Graph', data );
   }
 
-  private getStatus( req: Request, res: Response ) {
+  private getStatus( _: Request, res: Response ) {
     const status = GraphRegistry.instance.getSelfStatus();
     res.json( status );
   }

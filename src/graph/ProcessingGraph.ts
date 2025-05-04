@@ -1,13 +1,12 @@
-import Task, { ProcessingTask, TaskFunction } from './graph/Task';
-import GraphRunner, { GraphExecutionStrategy } from './runners/GraphRunner';
-import GraphServer, { ServerOptions } from './server/GraphServer';
-import GraphRegistry from './GraphRegistry';
-import DeputyTask from './graph/DeputyTask';
-import GraphRoutine from './graph/GraphRoutine';
-import GraphClient from './server/GraphClient';
-import UserAgent from './server/clients/UserAgent';
-import GraphServerCluster from './server/GraphServerCluster';
-import { sleep } from './utils/promise';
+import Task, { ProcessingTask, TaskFunction } from './Task';
+import GraphRunner, { GraphExecutionStrategy } from '../runners/GraphRunner';
+import GraphServer, { ServerOptions } from '../server/GraphServer';
+import GraphRegistry from '../server/GraphRegistry';
+import DeputyTask from './DeputyTask';
+import GraphRoutine from './GraphRoutine';
+import GraphClient from '../server/GraphClient';
+import UserAgent from '../server/clients/UserAgent';
+import GraphServerCluster from '../server/GraphServerCluster';
 
 
 export default class ProcessingGraph {
@@ -30,7 +29,7 @@ export default class ProcessingGraph {
     }
 
     const task = new DeputyTask(
-      ( context ) => true,
+      ( _ ) => true,
       `Deputy task for "${ name }"`,
       name,
       processingGraph,
@@ -44,13 +43,13 @@ export default class ProcessingGraph {
     return task;
   }
 
-  static createRoutine( name: string, tasks: ProcessingTask[], description: string = '' ) {
+  static createRoutine( name: string, tasks: ProcessingTask[], description: string = '' ): GraphRoutine {
     const routine = new GraphRoutine( name, description, tasks );
     GraphRegistry.instance.registerRoutine( routine );
     return routine;
   }
 
-  static createRunner( strategy: GraphExecutionStrategy = 'default' ) {
+  static createRunner( strategy: GraphExecutionStrategy = 'default' ): GraphRunner {
     const runner = new GraphRunner( strategy );
     GraphRegistry.instance.registerRunner( runner );
     return runner;
@@ -59,7 +58,8 @@ export default class ProcessingGraph {
   static createServer( name: string = '', description: string = '', options: ServerOptions = {
     loadBalance: false,
     useSocket: false,
-  } ) {
+    log: false,
+  } ): GraphServer {
     GraphServer.instance.setIdentity( name, description );
     if ( GraphServerCluster.isWorker() && ( options.useSocket || options.loadBalance ) ) {
       options.useSocket = false;
@@ -73,6 +73,7 @@ export default class ProcessingGraph {
   static createAgent( name: string = 'Processing graph agent', description: string = '', options: ServerOptions = {
     loadBalance: false,
     useSocket: false,
+    log: false,
   } ): UserAgent {
     GraphClient.instance.setOptions( options );
     const agent = GraphClient.instance.getUserAgent();
@@ -81,16 +82,16 @@ export default class ProcessingGraph {
     return agent;
   }
 
-  static createCluster( environment: { PORT: string, URL: string } = {
-    PORT: '3000',
-    URL: 'localhost'
-  } ) {
-    if ( GraphServerCluster.isPrimary() ) {
-      GraphServerCluster.instance.setSharedEnvironment( environment );
-      GraphServerCluster.instance.setupPrimary();
-      return true;
-    }
-
-    return false;
-  }
+  // static createCluster( environment: { PORT: string, URL: string } = {
+  //   PORT: '3000',
+  //   URL: 'localhost'
+  // } ): boolean {
+  //   if ( GraphServerCluster.isPrimary() ) {
+  //     GraphServerCluster.instance.setSharedEnvironment( environment );
+  //     GraphServerCluster.instance.setupPrimary();
+  //     return true;
+  //   }
+  //
+  //   return false;
+  // }
 }

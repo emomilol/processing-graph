@@ -1,7 +1,6 @@
 import GraphServerClient from '../../interfaces/GraphServerClient';
-import EventBroker from '../../interfaces/EventBroker';
-import { AnyObject } from '../../../types/global';
-import GraphRegistry from '../../GraphRegistry';
+import { AnyObject } from '../../types/global';
+import GraphRegistry from '../GraphRegistry';
 
 // The FetchAPI handles the communication over HTTP to other GraphServers REST API's.
 // It initiates deputy graph executions (runs).
@@ -59,7 +58,7 @@ export default class FetchClient extends GraphServerClient {
         }
       }
     } ).catch( e => {
-      this.forwardToServer( 'Remote server not responding', data );
+      this.forwardToServer( 'Remote server not responding', {...data, __fetchError: e.message } );
       GraphRegistry.instance.updateRemoteServer( {
         __serverId: data.__serverId,
         __graphId: data.__context.__graphId,

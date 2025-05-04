@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
-import { AnyObject } from '../../../types/global';
+import { AnyObject } from '../../types/global';
 import { Socket } from 'socket.io-client/build/esm/socket';
-import GraphRegistry from '../../GraphRegistry';
+import GraphRegistry from '../GraphRegistry';
 import GraphServerClient from '../../interfaces/GraphServerClient';
 
 

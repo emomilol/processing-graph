@@ -2,8 +2,8 @@ import { v4 as uuid } from 'uuid';
 import Task, { TaskFunction } from './Task';
 import GraphContext from '../context/GraphContext';
 import DeputyManager from '../server/clients/DeputyManager';
-import { AnyObject } from '../../types/global';
-import GraphRegistry from '../GraphRegistry';
+import { AnyObject } from '../types/global';
+import GraphRegistry from '../server/GraphRegistry';
 import { sleep } from '../utils/promise';
 
 type ResolveFunction = ( value: ( PromiseLike<unknown> | unknown ) ) => void;

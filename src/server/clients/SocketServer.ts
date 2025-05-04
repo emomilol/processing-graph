@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import Api from '../../interfaces/Api';
-import { AnyObject } from '../../../types/global';
-import GraphRegistry from '../../GraphRegistry';
+import { AnyObject } from '../../types/global';
+import GraphRegistry from '../GraphRegistry';
 import GraphServer from '../GraphServer';
 import GraphContextFactory from '../../context/GraphContextFactory';
 
@@ -103,7 +103,7 @@ export default class SocketServer extends Api {
     this.forwardToServer( 'Run graph', data );
   }
 
-  private broadcastStatus( data: AnyObject ) {
+  private broadcastStatus( _: AnyObject ) {
     const status = GraphRegistry.instance.getSelfStatus();
     this.io?.emit( 'status', status as any );
     this.forwardToServer( 'Broadcast of my status', status );

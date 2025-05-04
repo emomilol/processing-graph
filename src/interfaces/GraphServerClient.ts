@@ -1,6 +1,5 @@
-import { AnyObject } from '../../types/global';
+import { AnyObject } from '../types/global';
 import EventBroker from './EventBroker';
-import GraphServer from '../server/GraphServer';
 
 
 export default abstract class GraphServerClient {

@@ -1,8 +1,8 @@
-import Task from './graph/Task';
-import GraphRunner from './runners/GraphRunner';
+import Task from '../graph/Task';
+import GraphRunner from '../runners/GraphRunner';
 import { AnyObject } from '../types/global';
-import GraphRoutine from './graph/GraphRoutine';
-import DeputyTask from './graph/DeputyTask';
+import GraphRoutine from '../graph/GraphRoutine';
+import DeputyTask from '../graph/DeputyTask';
 
 
 interface GraphDescriptor {

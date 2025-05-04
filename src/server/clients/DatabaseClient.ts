@@ -1,7 +1,7 @@
 import GraphServerClient from '../../interfaces/GraphServerClient';
 import { Pool, PoolClient } from 'pg';
-import { AnyObject } from '../../../types/global';
-import GraphRegistry, { DeputyDescriptor } from '../../GraphRegistry';
+import { AnyObject } from '../../types/global';
+import GraphRegistry, { DeputyDescriptor } from '../GraphRegistry';
 import Task, { ProcessingTask } from '../../graph/Task';
 import * as fs from 'fs';
 import GraphRoutine from '../../graph/GraphRoutine';
@@ -27,15 +27,14 @@ export default class DatabaseClient extends GraphServerClient {
   constructor() {
     super();
     this.pool = new Pool( {
-      host: 'localhost',
-      port: 5432,
-      user: 'postgres',
-      password: 'password',
-      database: 'postgres',
-      min: 2,
+      host: process.env.DB_HOST ?? 'localhost',
+      port: parseInt(process.env.DB_PORT ?? '5432'),
+      user: process.env.DB_USER ?? 'postgres',
+      password: process.env.DB_PASSWORD ?? 'password',
+      database: process.env.DB_NAME ?? 'postgres',
       max: 5,
     } );
-    this.pool.on( 'error', ( err, client ) => {
+    this.pool.on( 'error', ( err, _ ) => {
       console.error( 'Unexpected error on idle client', err );
       process.exit( -1 );
     } );
@@ -48,11 +47,11 @@ export default class DatabaseClient extends GraphServerClient {
   }
 
   private async query( query:string, params?: any[] ) {
-    const start = Date.now();
-    const res = await this.pool.query( query, params );
-    const duration = Date.now() - start;
+    // const start = Date.now();
+    // const res = await this.pool.query( query, params );
+    // const duration = Date.now() - start;
     // console.log( 'executed query', { query, duration, rows: res.rowCount } );
-    return res;
+    return await this.pool.query( query, params ); // res
   }
 
   private async makeTransaction( data: AnyObject, transaction: ( client: PoolClient, context: AnyObject ) => Promise<AnyObject> ): Promise<AnyObject> {
@@ -307,12 +306,12 @@ export default class DatabaseClient extends GraphServerClient {
     }
   }
 
-  async updateServer( data: AnyObject ) {
-    if ( this.readOnly ) {
-      return;
-    }
-    // TODO
-  }
+  // async updateServer( data: AnyObject ) {
+  //   if ( this.readOnly ) {
+  //     return;
+  //   }
+  //   // TODO
+  // }
 
   async serverNotResponding( data: AnyObject ) {
     // if ( this.readOnly ) {
@@ -405,9 +404,9 @@ export default class DatabaseClient extends GraphServerClient {
     this.forwardToServer( 'Added task connection maps to data base', updatedData );
   }
 
-  async getTasks( data: AnyObject ) {
-    // TODO
-  }
+  // async getTasks( data: AnyObject ) {
+  //   // TODO
+  // }
 
   async addRoutines( data: AnyObject ) {
     if ( this.readOnly ) {
@@ -643,13 +642,6 @@ export default class DatabaseClient extends GraphServerClient {
       return;
     }
 
-    // TODO
-    const formData = {
-      nodeId: data.__id,
-      isProcessing: true,
-      progress: data.__progress ?? 0.3,
-    };
-    // then
     this.forwardToServer( 'Updated node progress on database', data );
   }
 
