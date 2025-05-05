@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/emomilol/processing-graph/compare/v1.0.1...v1.1.0) (2025-05-05)
+
+
+### Features
+
+* Add support for fetch when not using socket. ([2ed7894](https://github.com/emomilol/processing-graph/commit/2ed789450227856b6aa7ace1ea8263795ed8b712))
+
 ## [1.0.1](https://github.com/emomilol/processing-graph/compare/v1.0.0...v1.0.1) (2025-05-04)
 
 
