@@ -27,8 +27,8 @@ export default class DeputyMessageHandler extends MessageHandler {
   handleMessage( message: string, data: AnyObject, server: EventBroker ) {
     switch ( message ) {
       case 'Process remote task':
+        server.dispatch( data, 'fetchClient', 'runGraph' );
         server.dispatch( data, 'socketClient', 'runGraph' );
-        // server.dispatch( data, 'fetchClient', 'runGraph' );
         break;
 
       case 'Added deputy tasks to manager':

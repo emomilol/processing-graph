@@ -79,6 +79,7 @@ export default class GraphClient extends EventBroker {
     if ( this.useSocket ) {
       this.socketClient = SocketClient.instance;
       this.socketClient.connectToServer( this );
+      this.fetchClient.setPrioritizeSocket( true );
     }
 
     this.deputyManager = DeputyManager.instance;

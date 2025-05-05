@@ -15,8 +15,18 @@ export default class FetchClient extends GraphServerClient {
     return this.instance_;
   }
 
+  private prioritizeSocket: boolean = false;
+
+  setPrioritizeSocket( value: boolean ) {
+    this.prioritizeSocket = value;
+  }
+
   // To other graph servers:
   runGraph( data: AnyObject ) {
+    if ( this.prioritizeSocket && !data.__forceFetch ) {
+      return;
+    }
+
     const server = GraphRegistry.instance.getServerById( data.__serverId );
     if ( !server ) {
       return;

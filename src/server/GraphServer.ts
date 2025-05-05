@@ -125,10 +125,11 @@ export default class GraphServer extends EventBroker {
     this.fetchClient.connectToServer( this );
 
     if ( this.useSocket ) {
+      this.fetchClient.setPrioritizeSocket( true );
+
       this.socketServer = SocketServer.instance;
       this.socketServer.connectToServer( this );
       this.socketServer.setSchema( this.schema );
-
 
       this.socketClient = SocketClient.instance;
       this.socketClient.connectToServer( this );
