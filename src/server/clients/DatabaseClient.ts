@@ -3,10 +3,10 @@ import { Pool, PoolClient } from 'pg';
 import { AnyObject } from '../../types/global';
 import GraphRegistry, { DeputyDescriptor } from '../GraphRegistry';
 import Task, { ProcessingTask } from '../../graph/Task';
-import * as fs from 'fs';
 import GraphRoutine from '../../graph/GraphRoutine';
 import DatabaseClientQueue from './DatabaseClientQueue';
 import { sleep } from '../../utils/promise';
+import { schema } from '../db/schema';
 
 
 export default class DatabaseClient extends GraphServerClient {
@@ -102,10 +102,6 @@ export default class DatabaseClient extends GraphServerClient {
     return client
   }
 
-  private readQueryFormFile( path: string ): string {
-    return fs.readFileSync( path, 'utf8' );
-  }
-
   async addAgent( data: AnyObject ) {
     const userAgent = await this.query(
       `WITH input_rows(name, description) AS (VALUES ($1, $2)), 
@@ -188,8 +184,7 @@ export default class DatabaseClient extends GraphServerClient {
     }
 
     const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
-      const query = this.readQueryFormFile( 'src/server/db/schema.sql' );
-      await client.query( query ); // Set up database
+      await client.query( schema ); // Set up database
 
       const res = await client.query(
         `INSERT INTO processing_graph as p (name, description, created) VALUES ($1, $2, $3)
