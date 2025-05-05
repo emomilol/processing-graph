@@ -166,7 +166,11 @@ export default class GraphNode implements Graph {
     } else if ( this.result !== undefined && !this.errored ) {
       newNodes.push( ...this.generateNewNodes( this.result ) );
       if ( typeof this.result !== 'boolean' ) {
-        this.migrate( { ...this.result, ...this.context.getMetaData() } );
+        let result = this.result;
+        if ( typeof this.result === 'string' ) {
+          result = { message: this.result };
+        }
+        this.migrate( { ...result, ...this.context.getMetaData() } );
       }
     }
 

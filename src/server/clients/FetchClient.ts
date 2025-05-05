@@ -95,6 +95,7 @@ export default class FetchClient extends GraphServerClient {
         __serverId: server.__id,
         __address: server.__address,
         __serverPort: server.__port,
+        __pid: server.__pid,
         __pgId: server.__pgId,
         __isDeputy: server.__isDeputy,
         __isActive: server.__isActive,

@@ -165,6 +165,7 @@ export default class DatabaseClient extends GraphServerClient {
         data.__servers.push( {
           __address: server.address,
           __port: server.port,
+          __pid: server.pid,
           __id: server[ 'uuid' ],
           __isActive: true,
           __pgId: server.processing_graph,

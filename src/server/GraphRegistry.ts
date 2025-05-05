@@ -14,6 +14,7 @@ interface ServerDescriptor {
   id: string;
   address: string;
   port: number;
+  pid: number;
   processingGraphId: string;
   runningGraphs: GraphDescriptor[];
   cpu?: number;
@@ -56,6 +57,7 @@ export default class GraphRegistry {
     id: '',
     address: '',
     port: 3000,
+    pid: 0,
     processingGraphId: '',
     runningGraphs: [],
     cpu: 0.0,
@@ -162,6 +164,7 @@ export default class GraphRegistry {
         id: data.__serverId ?? '',
         address: data.__address ?? '',
         port: data.__serverPort ?? 3000,
+        pid: data.__pid ?? 0,
         processingGraphId: data.__pgId ?? '',
         runningGraphs: [],
         active: data.__isActive,
