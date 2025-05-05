@@ -17,8 +17,8 @@ export default class GraphServerCluster {
     PORT: string,
     URL: string,
   } = {
-    PORT: process.env.PORT ?? '3000',
-    URL: process.env.URL ?? 'localhost',
+    PORT: process.env.PG_GRAPH_SERVER_PORT ?? '3000',
+    URL: process.env.PG_GRAPH_SERVER_URL ?? 'localhost',
   };
   private timeouts: { [ pid: number ]: NodeJS.Timeout } = {};
 

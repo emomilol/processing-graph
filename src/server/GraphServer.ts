@@ -37,8 +37,8 @@ export default class GraphServer extends EventBroker {
     return this.instance_;
   }
 
-  protected port: string | number = process.env.PORT || 3000;
-  protected address: string = process.env.URL || 'localhost';
+  protected port: string | number = process.env.PG_GRAPH_SERVER_PORT || 3000;
+  protected address: string = process.env.PG_GRAPH_SERVER_URL || 'localhost';
   protected processPid: number = process.pid;
   protected server: Server | undefined;
   protected schema: ObjectSchema;

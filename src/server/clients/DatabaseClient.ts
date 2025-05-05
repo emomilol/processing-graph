@@ -27,11 +27,9 @@ export default class DatabaseClient extends GraphServerClient {
   constructor() {
     super();
     this.pool = new Pool( {
-      host: process.env.DB_HOST ?? 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '5432'),
-      user: process.env.DB_USER ?? 'postgres',
-      password: process.env.DB_PASSWORD ?? 'password',
-      database: process.env.DB_NAME ?? 'postgres',
+      host: process.env.PG_GRAPH_DB_URL ?? 'localhost',
+      user: process.env.PG_GRAPH_DB_USER ?? 'postgres',
+      password: process.env.PG_GRAPH_DB_PASSWORD ?? 'password',
       max: 5,
     } );
     this.pool.on( 'error', ( err, _ ) => {
