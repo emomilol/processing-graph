@@ -52,8 +52,6 @@ export default class DatabaseMessageHandler extends MessageHandler {
       case 'Got deputy servers':
       case 'Got all servers':
         server.dispatch( data, 'fetchClient', 'registerServers' );
-        // TODO first ping servers with fetch and then connect to socket
-        server.dispatch( data, 'socketClient', 'connectToServers' );
         break;
 
       case 'Updated server active state on database':
@@ -68,7 +66,13 @@ export default class DatabaseMessageHandler extends MessageHandler {
         server.dispatch( data, 'userAgent', 'onContractRecorded' );
         break;
 
+      case 'Got self':
+        server.dispatch( data, 'databaseClient', 'activateSelf' );
+        break;
+
       case 'Got server':
+      case 'Activated self':
+      case 'Activated server':
       case 'Added new instance':
       case 'Error database':
       case 'Node added to database':

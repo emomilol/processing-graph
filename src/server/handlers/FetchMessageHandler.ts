@@ -38,10 +38,15 @@ export default class FetchMessageHandler extends MessageHandler {
 
       case 'Registered server':
         server.dispatch( data, 'databaseClient', 'registerServerConnection' );
+        server.dispatch( data, 'socketClient', 'connectToSocketServer' );
         break;
 
       case 'Remote server not responding':
         server.dispatch( data, 'databaseClient', 'serverNotResponding' );
+        break;
+
+      case 'Remote server reactivated':
+        server.dispatch( data, 'databaseClient', 'activateServer' );
         break;
 
       case 'Asked for update from dependee':

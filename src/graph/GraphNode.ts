@@ -172,6 +172,12 @@ export default class GraphNode implements Graph {
         }
         this.migrate( { ...result, ...this.context.getMetaData() } );
       }
+
+    } else if ( this.errored ) {
+      newNodes.push( ...this.task.mapNext(
+        ( t: Task ) => this.clone().differentiate( t ).migrate( { ...this.result as any } ),
+        true,
+      ) );
     }
 
     this.divided = true;
@@ -194,12 +200,13 @@ export default class GraphNode implements Graph {
 
     } else {
       const shouldContinue = !result;
-      newNodes.push(
-        ...this.task.mapNext(
-          ( t: Task ) => this.clone().differentiate( t ),
-          shouldContinue,
-        ) as GraphNode[],
-      );
+      if ( shouldContinue ) {
+        newNodes.push(
+          ...this.task.mapNext(
+            ( t: Task ) => this.clone().differentiate( t ),
+          ) as GraphNode[],
+        );
+      }
     }
 
     return newNodes;

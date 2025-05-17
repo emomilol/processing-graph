@@ -32,7 +32,11 @@ export default class SocketClient extends GraphServerClient {
     }
   }
 
-  private connectToSocketServer( data: AnyObject ) {
+  connectToSocketServer( data: AnyObject ) {
+    if ( data.__isActive === false ) {
+      return;
+    }
+
     const serverId = data.__id;
     const serverAddress = data.__address;
     const serverPort = data.__port;

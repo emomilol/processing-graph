@@ -29,6 +29,7 @@ export default class DatabaseClient extends GraphServerClient {
     this.pool = new Pool( {
       host: process.env.PG_GRAPH_DB_URL ?? 'localhost',
       user: process.env.PG_GRAPH_DB_USER ?? 'postgres',
+      database: process.env.PG_GRAPH_DB_NAME ?? 'processing_graph_test',
       password: process.env.PG_GRAPH_DB_PASSWORD ?? 'password',
       max: 5,
     } );
@@ -154,8 +155,7 @@ export default class DatabaseClient extends GraphServerClient {
 
   async getServers( data: AnyObject ) {
     const servers = await this.query(
-      `SELECT uuid, address, port, processing_graph FROM server WHERE is_active = TRUE;`,
-      [],
+      `SELECT uuid, address, port, processing_graph, process_pid, is_active FROM server WHERE is_primary = TRUE;`,
     );
 
     data.__servers = data.__servers ?? [];
@@ -165,16 +165,58 @@ export default class DatabaseClient extends GraphServerClient {
         data.__servers.push( {
           __address: server.address,
           __port: server.port,
-          __pid: server.pid,
+          __pid: server.process_pid,
           __id: server[ 'uuid' ],
-          __isActive: true,
           __pgId: server.processing_graph,
           __isDeputy: false,
+          __isActive: server.is_active,
         } );
       }
     }
 
     this.forwardToServer( 'Got all servers', data );
+  }
+
+  async getSelf() {
+    const self = GraphRegistry.instance.getSelfStatus();
+    if ( self !== undefined ) {
+      const serverId = self.__serverId;
+      const serverData = await this.query(
+        `SELECT uuid, is_active, is_non_responsive, is_blocked, process_pid
+       FROM server
+       WHERE uuid = $1;`,
+        [ serverId ],
+      );
+
+      if ( serverData.rows.length === 1 ) {
+        const server = {
+          __serverId: serverData.rows[ 0 ]["uuid"],
+          __isActive: serverData.rows[ 0 ].is_active,
+          __isNonResponsive: serverData.rows[ 0 ].is_non_responsive,
+          __isBlocked: serverData.rows[ 0 ].is_blocked,
+          __pid: serverData.rows[ 0 ].process_pid
+        }
+        this.forwardToServer( 'Got self', server );
+      }
+    }
+  }
+
+  async activateSelf( data: AnyObject ) {
+    if ( data.__isActive === false ) {
+      await this.activateServer( data );
+      this.forwardToServer( 'Activated self', data );
+    }
+  }
+
+  async activateServer( data: AnyObject ) {
+    if ( data.__isActive === false ) {
+      const result = await this.query(
+        `UPDATE server AS s SET is_non_responsive = FALSE, is_active = TRUE, modified = DEFAULT WHERE s.uuid = $1 RETURNING uuid, is_active, is_non_responsive;`,
+        [ data.__serverId ],
+      );
+
+      this.forwardToServer( 'Activated server', result.rows[0] );
+    }
   }
 
   async addServer( data: AnyObject ) {
@@ -212,6 +254,7 @@ export default class DatabaseClient extends GraphServerClient {
         __address: _data.__address,
         __port: _data.__port,
         __pgId: pgId,
+        __pid: _data.__pid
       } );
 
       return _data;
@@ -234,7 +277,7 @@ export default class DatabaseClient extends GraphServerClient {
         }
 
         const servers = await client.query(
-          `SELECT uuid, address, port FROM server s WHERE s.processing_graph = $1 AND s.is_active = TRUE;`,
+          `SELECT uuid, address, port, process_pid, is_active FROM server s WHERE s.processing_graph = $1;`,
           [ processingGraph ],
         );
 
@@ -252,9 +295,11 @@ export default class DatabaseClient extends GraphServerClient {
             _data.__servers.push( {
               __address: server.address,
               __port: server.port,
+              __pid: server.process_pid,
               __id: server[ 'uuid' ],
               __pgId: processingGraph,
               __isDeputy: true,
+              __isActive: server.is_active,
             } );
           }
         }
@@ -284,7 +329,7 @@ export default class DatabaseClient extends GraphServerClient {
       return;
     }
 
-    if ( !data.__isDeputy ) {
+    if ( !data.__isDeputy || data.__isActive === false ) {
       return;
     }
 
@@ -300,28 +345,13 @@ export default class DatabaseClient extends GraphServerClient {
     }
   }
 
-  // async updateServer( data: AnyObject ) {
-  //   if ( this.readOnly ) {
-  //     return;
-  //   }
-  //   // TODO
-  // }
-
   async serverNotResponding( data: AnyObject ) {
-    // if ( this.readOnly ) {
-    //   return;
-    // }
-
     await this.query(
       `UPDATE server AS s SET is_non_responsive = TRUE, is_active = FALSE, modified = DEFAULT WHERE s.uuid = $1;`,
       [ data.__serverId ],
     );
-    this.forwardToServer( 'Updated server active state on database', data );
-  }
 
-  async serverOverLoaded( data: AnyObject ) {
-    // TODO
-    this.forwardToServer( 'Updated server overloaded status on database', data );
+    this.forwardToServer( 'Updated server active state on database', data );
   }
 
   async addTasks( data: AnyObject ) {

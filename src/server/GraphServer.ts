@@ -139,6 +139,8 @@ export default class GraphServer extends EventBroker {
     this.deputyManager.connectToServer( this );
     this.deputyManager.setLoadBalance( this.loadBalance );
 
+    this.dispatch( {}, 'databaseClient', 'getServers' );
+
     this.dispatch( {
       __name: this.identity,
       __description: this.processingGraphDescription,
@@ -157,6 +159,7 @@ export default class GraphServer extends EventBroker {
     setInterval( () => {
       this.dispatch( {}, 'databaseClient', 'getDeputyServers' );
       this.dispatch( {}, 'databaseClient', 'getRoutines' );
+      this.dispatch( {}, 'databaseClient', 'getSelf' );
     }, 30000 );
   }
 

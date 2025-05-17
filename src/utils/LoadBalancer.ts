@@ -12,7 +12,7 @@ export default class LoadBalancer {
   public selectServer( data: AnyObject = {} ) {
     data.__serverCandidates = GraphRegistry.instance.getServerIdsByProcessingGraphId( data.__pgId );
 
-    if ( !data.__serverCandidates ) {
+    if ( !data.__serverCandidates || data.__serverCandidates.length === 0 ) {
       return data;
     }
 

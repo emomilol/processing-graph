@@ -76,7 +76,7 @@ export default class RestAPI extends Api {
   private runGraph( req: Request, res: Response ) {
     if ( this.schema ) {
       const { error } = this.schema.validate( req.body );
-      if ( error ) return res.status( 400 ).json( { __error: error.details[0].message } ); // TODO dont send the error message in production
+      if ( error ) return res.status( 400 ).json( { __error: 'Validation failed' } );
     }
 
     if ( !req.body.__forceRun && GraphRegistry.instance.checkSelf() ) {

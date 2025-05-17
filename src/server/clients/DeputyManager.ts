@@ -51,10 +51,14 @@ export default class DeputyManager extends GraphServerClient {
   }
 
   processRemoteTask( data: AnyObject ) {
+    if ( data.__isActive === false ) {
+      return;
+    }
+
     const processedData = this.loadBalancer.selectServer( data );
     if ( !processedData.__serverId ) {
       data.__error = 'No server available';
-      this.resolveDeputyTask( data );
+      this.resolveDeputyTask( data ); // TODO Wait until the server is available?
       return;
     }
 

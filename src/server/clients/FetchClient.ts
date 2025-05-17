@@ -68,7 +68,7 @@ export default class FetchClient extends GraphServerClient {
         }
       }
     } ).catch( e => {
-      this.forwardToServer( 'Remote server not responding', {...data, __fetchError: e.message } );
+      this.forwardToServer( 'Remote server not responding', { ...data, __fetchError: e.message } );
       GraphRegistry.instance.updateRemoteServer( {
         __serverId: data.__serverId,
         __graphId: data.__context.__graphId,
@@ -78,9 +78,30 @@ export default class FetchClient extends GraphServerClient {
     this.forwardToServer( 'Running graph on remote server', data );
   }
 
-  getStatus( data: AnyObject ) {
-    // TODO Ping to see if it is alive
-    this.forwardToServer( 'Asked for update from dependee', data );
+  private async getStatus( server: AnyObject ): Promise<AnyObject> {
+    if ( GraphRegistry.instance.isSelf( server ) ) {
+      return { ...server, __isActive: true };
+    }
+
+    const response = await fetch( `http://${ server.__address }:${ server.__port }/api/status`, { method: 'GET' } ).catch( e => {
+      return { status: 500 };
+    } );
+
+    if ( response.status === 200 ) {
+      try {
+        const responseData = await ( response as Response ).json();
+        if (server.__pid !== responseData.__pid) {
+          return { ...server, __isActive: false };
+        }
+
+        return { ...server, __isActive: true, __runningGraphs: responseData.__runningGraphs };
+      } catch ( e ) {
+        console.error('Error converting response to json', e, server);
+        return { ...server };
+      }
+    } else {
+      return { ...server, __isActive: false };
+    }
   }
 
   registerServers( data: AnyObject ) {
@@ -88,20 +109,30 @@ export default class FetchClient extends GraphServerClient {
       return;
     }
 
-    // TODO getStatus
-
     for ( const server of data.__servers ) {
-      GraphRegistry.instance.registerServer( {
-        __serverId: server.__id,
-        __address: server.__address,
-        __serverPort: server.__port,
-        __pid: server.__pid,
-        __pgId: server.__pgId,
-        __isDeputy: server.__isDeputy,
-        __isActive: server.__isActive,
-      } );
+      this.getStatus( server ).then( async (serverResponse: AnyObject) => {
+        const serverData = {
+          __serverId: serverResponse.__id,
+          __address: serverResponse.__address,
+          __serverPort: serverResponse.__port,
+          __pid: serverResponse.__pid,
+          __pgId: serverResponse.__pgId,
+          __isDeputy: serverResponse.__isDeputy,
+          __isActive: serverResponse.__isActive,
+        };
 
-      this.forwardToServer( 'Registered server', server );
+        if ( server.__isActive === true && serverResponse.__isActive === false ) {
+          this.forwardToServer( 'Remote server not responding', serverData );
+          return;
+        } else if ( server.__isActive === false && serverResponse.__isActive === true ) {
+          this.forwardToServer( 'Remote server reactivated', serverData );
+        } else if ( server.__isActive === false && serverResponse.__isActive === false ) {
+          return;
+        }
+
+        GraphRegistry.instance.registerServer( serverData );
+        this.forwardToServer( 'Registered server', serverResponse );
+      } );
     }
   }
 

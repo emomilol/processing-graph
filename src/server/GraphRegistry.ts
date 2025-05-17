@@ -172,6 +172,12 @@ export default class GraphRegistry {
         routines: data.__routines ?? [],
         isDeputy: data.__isDeputy ?? false,
       } );
+
+    } else {
+      const server = this.servers.get( data.__serverId );
+      if ( server ) {
+        this.updateServer( server, data );
+      }
     }
   }
 
@@ -191,10 +197,19 @@ export default class GraphRegistry {
       data.__pgId = this.self.processingGraphId;
       data.__active = this.self.active;
       data.__runningGraphs = this.self.runningGraphs;
+      data.__pid = this.self.pid;
       return data;
     }
 
     return undefined;
+  }
+
+  isSelf( server: any ) {
+    if ( !server ) {
+      return false;
+    }
+
+    return server.__id === this.self.id;
   }
 
   private isOverloaded( server: any ) {
@@ -214,7 +229,7 @@ export default class GraphRegistry {
   }
 
   private updateServer( server: ServerDescriptor, data: AnyObject ) {
-    server.active = true;
+    server.active = server.active !== undefined ? server.active : true;
 
     if ( !server.id && data.__serverId ) {
       server.id = data.__serverId;
@@ -227,6 +242,10 @@ export default class GraphRegistry {
 
     if ( !server.processingGraphId && data.__pgId ) {
       server.processingGraphId = data.__pgId;
+    }
+
+    if ( data.__pid !== undefined ) {
+      server.pid = data.__pid;
     }
 
     if ( data.__runningGraphs !== undefined ){

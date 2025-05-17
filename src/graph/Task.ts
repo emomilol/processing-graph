@@ -136,7 +136,13 @@ export default class Task implements ProcessingTask, Graph {
   }
 
   public decouple( task: Task ) {
-    task.nextTasks.splice( task.nextTasks.indexOf( this ), 1 );
+    if ( task.nextTasks.includes( this ) ) {
+      task.nextTasks.splice( task.nextTasks.indexOf( this ), 1 );
+    }
+
+    if ( task.onFailTasks.includes( this ) ) {
+      task.onFailTasks.splice( task.onFailTasks.indexOf( this ), 1 );
+    }
   }
 
   public export(): ProcessingTaskSnapshot {
