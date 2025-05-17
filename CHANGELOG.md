@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/emomilol/processing-graph/compare/v1.1.1...v1.1.2) (2025-05-05)
+
+
+### Bug Fixes
+
+* Fixed cases where tasks returns strings. It will now be added as a 'message' property in the context. ([4ca6ca7](https://github.com/emomilol/processing-graph/commit/4ca6ca7d57bde97af2487d73539f747bc28b9186))
+
 ## [1.1.1](https://github.com/emomilol/processing-graph/compare/v1.1.0...v1.1.1) (2025-05-05)
 
 
