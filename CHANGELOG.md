@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/emomilol/processing-graph/compare/v1.1.2...v1.2.0) (2025-05-17)
+
+
+### Features
+
+* Now services are regularly pinged to see if they respond else they are set to inactive on the database and won't be used as candidates for delegation. ([501e7ff](https://github.com/emomilol/processing-graph/commit/501e7fff05d8fc7ad8d5c9cb97974f87060cdbbe))
+
 ## [1.1.2](https://github.com/emomilol/processing-graph/compare/v1.1.1...v1.1.2) (2025-05-05)
 
 
