@@ -1,3 +1,19 @@
+# [2.0.0](https://github.com/emomilol/processing-graph/compare/v1.2.0...v2.0.0) (2025-05-21)
+
+
+### Features
+
+* Task concurrency is now properly implemented. ([1d0596e](https://github.com/emomilol/processing-graph/commit/1d0596e1b1edc3e31cd0b6385d16a01fbef7ff66))
+
+
+### BREAKING CHANGES
+
+* Unique tasks will now receive an object with the field "joinedContexts" which contains a list of contexts.
+
+feat: The server will assign its own address.
+
+fix: Fixed issue when deputy task timed out.
+
 # [1.2.0](https://github.com/emomilol/processing-graph/compare/v1.1.2...v1.2.0) (2025-05-17)
 
 
