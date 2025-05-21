@@ -101,8 +101,10 @@ export default class SocketClient extends GraphServerClient {
             __graphId: data.__context.__graphId,
           } );
 
-          data.__error = `Timeout error: ${ error }`;
-          this.forwardToServer( 'Timeout error on running remote graph', data );
+          data.__context.__error = `Timeout error: ${ error }`;
+          data.__context.__errored = true;
+          const result = { ...data.__context, ...data.__context.__metaData };
+          this.forwardToServer( 'Timeout error on running remote graph', result ); // TODO: This is not working yet for some reason
           return;
         }
 

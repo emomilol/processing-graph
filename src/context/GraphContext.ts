@@ -41,13 +41,14 @@ export default class GraphContext {
   }
 
   combine( otherContext: GraphContext ) {
-    let newContext;
-    if ( !Array.isArray( this.context ) ) {
-      newContext = [ this.context, otherContext.clone().getFullContext() ];
+    const normalizedOtherContext = otherContext.clone().getContext();
 
+    const newContext = !this.context.joinedContexts ? { joinedContexts: [ this.context ] } : this.context;
+
+    if ( Array.isArray( normalizedOtherContext.joinedContexts ) ) {
+      newContext.joinedContexts.push( ...normalizedOtherContext.joinedContexts );
     } else {
-      newContext = this.context;
-      newContext.push( otherContext.clone().getFullContext() );
+      newContext.joinedContexts.push( normalizedOtherContext );
     }
 
     return this.mutate( newContext );
@@ -56,7 +57,7 @@ export default class GraphContext {
   export() {
     return {
       __id: this.id,
-      __context: this.getContext(),
+      __context: this.getFullContext(),
     };
   }
 

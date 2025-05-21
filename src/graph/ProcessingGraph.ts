@@ -10,14 +10,14 @@ import GraphServerCluster from '../server/GraphServerCluster';
 
 
 export default class ProcessingGraph {
-  static createTask( func: TaskFunction, name: string, description?: string ): ProcessingTask {
-    const task = new Task( func, name, description );
+  static createTask( func: TaskFunction, name: string, description?: string, concurrency?: number ): ProcessingTask {
+    const task = new Task( func, name, description, false, concurrency );
     GraphRegistry.instance.registerTask( task );
     return task;
   }
 
-  static createUniqueTask( func: TaskFunction, name: string, description?: string ): ProcessingTask {
-    const task = new Task( func, name, description, true );
+  static createUniqueTask( func: TaskFunction, name: string, description?: string, concurrency?: number ): ProcessingTask {
+    const task = new Task( func, name, description, true, concurrency );
     GraphRegistry.instance.registerTask( task );
     return task;
   }
@@ -64,7 +64,7 @@ export default class ProcessingGraph {
     if ( GraphServerCluster.isWorker() && ( options.useSocket || options.loadBalance ) ) {
       options.useSocket = false;
       options.loadBalance = false;
-      console.warn( 'The options "loadBalance" and "useSocket" are not available in cluster mode.' );
+      console.warn( 'The options "loadBalance" and "useSocket" are not available in cluster mode. Setting them to false...' );
     }
     GraphServer.instance.setOptions( options );
     return GraphServer.instance;
@@ -76,10 +76,8 @@ export default class ProcessingGraph {
     log: false,
   } ): UserAgent {
     GraphClient.instance.setOptions( options );
-    const agent = GraphClient.instance.getUserAgent();
-    agent.setName( name );
     GraphClient.instance.connect();
-    return agent;
+    return GraphClient.instance.createUserAgent(name, description);
   }
 
   // static createCluster( environment: { PORT: string, URL: string } = {

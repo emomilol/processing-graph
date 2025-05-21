@@ -8,27 +8,12 @@ import DeputyTask from '../../graph/DeputyTask';
 type ResolveFunction = ( value: AnyObject | PromiseLike<AnyObject> ) => void;
 
 export default class UserAgent extends GraphServerClient {
-  private static instance_: UserAgent;
-
-  static get instance() {
-    if ( !this.instance_ ) {
-      this.instance_ = new UserAgent();
-    }
-
-    return this.instance_;
-  }
-
   private id: string = '';
   private name: string = 'Processing graph agent';
   private description: string = '';
   private contractToRecordedPromise: { [ id: string ]: ResolveFunction } = {};
   private idToResolve: { [ id: string ]: ResolveFunction } = {};
-  private idToReject: { [ id: string ]: ResolveFunction } = {};
   private idToContractId: { [ id: string ]: string } = {};
-
-  protected constructor() {
-    super();
-  }
 
   setIdentity( data: AnyObject ) {
     this.id = data.__agentId ?? '';
@@ -55,7 +40,7 @@ export default class UserAgent extends GraphServerClient {
     delete this.contractToRecordedPromise[ data.__contractId ];
   }
 
-  async newContract( name: string, context: AnyObject ): Promise<AnyObject> {
+  async createContract( name: string, context: AnyObject ): Promise<AnyObject> {
     const contractIssueTime = Date.now();
     const contractId = uuid();
 
@@ -99,6 +84,7 @@ export default class UserAgent extends GraphServerClient {
       __userProcessId: processId,
       __isClient: true,
       __contractId: contractId,
+      __agentId: this.id,
     };
 
     await contractRecordedPromise;
@@ -107,7 +93,6 @@ export default class UserAgent extends GraphServerClient {
 
     return new Promise( ( resolve, reject ) => {
       this.idToResolve[ processId ] = resolve;
-      this.idToReject[ processId ] = reject;
     } );
   }
 
@@ -115,11 +100,7 @@ export default class UserAgent extends GraphServerClient {
     const context = GraphContextFactory.instance.getContext( data );
     const result = context.getContext();
 
-    if ( data.__error ) {
-      this.idToReject[ data.__userProcessId ]( { error: 'Request failed.' } );
-    } else {
-      this.idToResolve[ data.__userProcessId ]( result );
-    }
+    this.idToResolve[ data.__userProcessId ]( result );
 
     data.__contractId = this.idToContractId[ data.__userProcessId ];
     data.__contractFulfilledTime = Date.now();
@@ -128,7 +109,6 @@ export default class UserAgent extends GraphServerClient {
     this.forwardToServer( 'Resolved process', data );
 
     delete this.idToResolve[ data.__userProcessId ];
-    delete this.idToReject[ data.__userProcessId ];
     delete this.idToContractId[ data.__userProcessId ];
   }
 }

@@ -59,11 +59,11 @@ export default class DatabaseMessageHandler extends MessageHandler {
         break;
 
       case 'Added agent':
-        server.dispatch( data, 'userAgent', 'setIdentity' );
+        server.dispatch( data, 'userAgentManager', 'setIdentity' );
         break;
 
       case 'Contract added to database':
-        server.dispatch( data, 'userAgent', 'onContractRecorded' );
+        server.dispatch( data, 'userAgentManager', 'onContractRecorded' );
         break;
 
       case 'Got self':

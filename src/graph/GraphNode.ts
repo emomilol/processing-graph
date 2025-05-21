@@ -9,10 +9,11 @@ import GraphContextFactory from '../context/GraphContextFactory';
 
 export default class GraphNode implements Graph {
   id: string;
+  graphId: string;
   private task: Task;
-  private graphId: string;
   private context: GraphContext;
   private divided: boolean = false;
+  private splitGroupId: string = '';
   private processing: boolean = false;
   private subgraphComplete: boolean = false;
   private graphComplete: boolean = false;
@@ -30,6 +31,7 @@ export default class GraphNode implements Graph {
     this.previousNodes = prevNodes;
     this.id = uuid();
     this.graphId = graphId;
+    this.splitGroupId = graphId;
   }
 
   public isUnique() {
@@ -61,11 +63,11 @@ export default class GraphNode implements Graph {
   }
 
   public sharesTaskWith( node: GraphNode ) {
-    return this.task === node.task;
+    return this.task.id === node.task.id;
   }
 
   public sharesContextWith( node:  GraphNode ) {
-    return this.context === node.context;
+    return this.context.id === node.context.id;
   }
 
   public getLayerIndex() {
@@ -132,6 +134,14 @@ export default class GraphNode implements Graph {
   }
 
   private postProcess() {
+    if ( typeof this.result === 'string' ) {
+      this.onError( `Returning strings is not allowed. Returned: ${ this.result }` );
+    }
+
+    if ( Array.isArray( this.result ) ) {
+      this.onError( `Returning arrays is not allowed. Returned: ${ this.result }` );
+    }
+
     this.nextNodes = this.divide();
 
     if ( this.nextNodes.length === 0 ) {
@@ -145,6 +155,8 @@ export default class GraphNode implements Graph {
     this.result = {
       ...this.context.getFullContext(),
       __error: `Node error: ${ error }`,
+      error: `Node error: ${ error }`,
+      returnedValue: this.result,
     };
     this.migrate( this.result );
     this.errored = true;
@@ -166,32 +178,38 @@ export default class GraphNode implements Graph {
     } else if ( this.result !== undefined && !this.errored ) {
       newNodes.push( ...this.generateNewNodes( this.result ) );
       if ( typeof this.result !== 'boolean' ) {
-        let result = this.result;
-        if ( typeof this.result === 'string' ) {
-          result = { message: this.result };
-        }
-        this.migrate( { ...result, ...this.context.getMetaData() } );
+        this.migrate( { ...this.result, ...this.context.getMetaData() } );
       }
 
     } else if ( this.errored ) {
       newNodes.push( ...this.task.mapNext(
-        ( t: Task ) => this.clone().differentiate( t ).migrate( { ...this.result as any } ),
+        ( t: Task ) => this.clone().split( uuid() ).differentiate( t ).migrate( { ...this.result as any } ),
         true,
       ) );
     }
 
     this.divided = true;
+    this.migrate( { ...this.context.getFullContext(), __nextNodes: newNodes.map( n => n.id ) } );
 
     return newNodes;
   }
 
   private generateNewNodes( result: any ) {
+    const groupId = uuid();
     const newNodes = [];
     if ( typeof result !== 'boolean' ) {
       const failed = ( result.failed !== undefined && result.failed ) || result.error !== undefined;
       newNodes.push(
         ...this.task.mapNext(
-          ( t: Task ) => this.clone().differentiate( t ).migrate( { ...result, ...this.context.getMetaData() } ),
+          ( t: Task ) => {
+            const context = t.isUnique ?
+              {
+                joinedContexts: [ { ...result, taskName: this.task.name, __nodeId: this.id } ],
+                ...this.context.getMetaData(),
+              } :
+              { ...result, ...this.context.getMetaData() };
+            return this.clone().split( groupId ).differentiate( t ).migrate( context );
+          },
           failed,
         ) as GraphNode[],
       );
@@ -203,7 +221,17 @@ export default class GraphNode implements Graph {
       if ( shouldContinue ) {
         newNodes.push(
           ...this.task.mapNext(
-            ( t: Task ) => this.clone().differentiate( t ),
+            ( t: Task ) => {
+              const newNode = this.clone().split( groupId ).differentiate( t );
+              if ( t.isUnique ) {
+                newNode.migrate( {
+                  joinedContexts: [ { ...this.context.getContext(), taskName: this.task.name, __nodeId: this.id } ],
+                  ...this.context.getMetaData(),
+                } );
+              }
+
+              return newNode;
+            },
           ) as GraphNode[],
         );
       }
@@ -219,6 +247,11 @@ export default class GraphNode implements Graph {
 
   private migrate( ctx: any ): GraphNode {
     this.context = GraphContextFactory.instance.getContext( ctx );
+    return this;
+  }
+
+  private split( id: string ): GraphNode {
+    this.splitGroupId = id;
     return this;
   }
 
@@ -288,6 +321,7 @@ export default class GraphNode implements Graph {
       __id: this.id,
       __task: this.task.export(),
       __context: this.context.export(),
+      __result: this.result,
       __executionTime: this.executionTime,
       __executionStart: this.executionStart,
       __nextNodes: this.nextNodes.map( node => node.id ),
@@ -297,7 +331,8 @@ export default class GraphNode implements Graph {
       __graphComplete: this.graphComplete,
       __failed: this.failed,
       __errored: this.errored,
-      __isUnique: this.isUnique()
+      __isUnique: this.isUnique(),
+      __splitGroupId: this.splitGroupId,
     };
   }
 
@@ -319,6 +354,7 @@ export default class GraphNode implements Graph {
       __failed: this.failed,
       __errored: this.errored,
       __isUnique: this.isUnique(),
+      __splitGroupId: this.splitGroupId,
     };
   }
 

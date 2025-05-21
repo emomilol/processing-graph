@@ -63,30 +63,28 @@ export default abstract class GraphLayer extends ExecutionChain implements Graph
   }
 
   add( node: GraphNode ) {
-    for ( const n of this.nodes ) {
-      if ( n.isEqualTo( node ) ) {
-        return;
-      }
-
-      if ( n.sharesTaskWith( node ) && n.isUnique() ) {
-        n.consume( node );
-        return;
-      }
+    if ( !this.shouldAdd( node ) ) {
+      return;
     }
 
     this.nodes.push( node );
 
-    this.nodes.sort( ( a, b ) => {
-      if ( a.id === b.id ) {
-        return 0;
-      } else if ( a.id > b.id ) {
-        return 1;
+    this.report( 'Scheduled node', { ...node.lightExport(), __scheduled: Date.now() } );
+  }
+
+  shouldAdd( node: GraphNode ) {
+    for ( const n of this.nodes ) {
+      if ( n.isEqualTo( node ) ) {
+        return false;
       }
 
-      return -1;
-    } );
+      if ( n.sharesTaskWith( node ) && n.isUnique() ) {
+        n.consume( node );
+        return false;
+      }
+    }
 
-    this.report( 'Scheduled node', { ...node.lightExport(), __scheduled: Date.now() } );
+    return true;
   }
 
   start() {

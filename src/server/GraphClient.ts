@@ -13,6 +13,8 @@ import ProcessingGraph from '../graph/ProcessingGraph';
 import GraphRunner from '../runners/GraphRunner';
 import UserAgent from './clients/UserAgent';
 import UserAgentHandler from './handlers/UserAgentHandler';
+import UserAgentManager from './clients/UserAgentManager';
+import UserAgentManagerHandler from './handlers/UserAgentManagerHandler';
 
 
 export default class GraphClient extends EventBroker {
@@ -33,30 +35,28 @@ export default class GraphClient extends EventBroker {
   protected databaseClient: DatabaseClient | undefined;
   protected socketClient: SocketClient | undefined;
   protected deputyManager: DeputyManager | undefined;
-  protected userAgent: UserAgent;
+  protected userAgentManager: UserAgentManager | undefined;
 
   protected handlers: MessageHandler[] = [
     DatabaseMessageHandler.instance,
-    UserAgentHandler.instance,
     SocketMessageHandler.instance,
-    DeputyMessageHandler.instance,
     FetchMessageHandler.instance,
+    DeputyMessageHandler.instance,
+    UserAgentHandler.instance,
+    UserAgentManagerHandler.instance,
   ];
 
   protected constructor() {
     super();
     this.runner = ProcessingGraph.createRunner( 'async' );
     this.runner.connectToServer( this );
-
-    this.userAgent = UserAgent.instance;
-    this.userAgent.connectToServer( this );
   }
 
   private loadBalance: boolean = true;
   private useSocket: boolean = true;
 
-  getUserAgent(): UserAgent {
-    return this.userAgent;
+  createUserAgent( name: string = 'Processing graph agent', description: string = '' ): UserAgent {
+    return UserAgentManager.instance.createUserAgent( name, description );
   }
 
   setOptions( options: ServerOptions ) {
@@ -86,14 +86,13 @@ export default class GraphClient extends EventBroker {
     this.deputyManager.connectToServer( this );
     this.deputyManager.setLoadBalance( this.loadBalance );
 
+    this.userAgentManager = UserAgentManager.instance;
+    this.userAgentManager.connectToServer( this );
+
     this.connected = true;
 
     this.dispatch( {}, 'databaseClient', 'getServers' );
     this.dispatch( {}, 'databaseClient', 'getRoutines' );
-    this.dispatch( {
-      __name: this.userAgent.getName(),
-      __description: this.userAgent.getDescription(),
-    }, 'databaseClient', 'addAgent' );
 
     this.schedule();
   }

@@ -14,7 +14,6 @@ export default class DeputyTask extends Task {
   private processingGraphName: string | undefined;
   private manager: DeputyManager | undefined;
   private idToResolve: { [ id: string ]: ResolveFunction } = {};
-  private idToReject: { [ id: string ]: ResolveFunction } = {};
 
   constructor(
     task: TaskFunction,
@@ -51,7 +50,6 @@ export default class DeputyTask extends Task {
         this.taskFunction( ctx );
 
         this.idToResolve[ processId ] = resolve;
-        this.idToReject[ processId ] = reject;
       } );
     }
 
@@ -86,13 +84,7 @@ export default class DeputyTask extends Task {
   }
 
   public resolveProcess( data: AnyObject ) {
-    if ( data.__error ) {
-      this.idToReject[ data.__deputyProcessId ]( data );
-    } else {
-      this.idToResolve[ data.__deputyProcessId ]( data );
-    }
-
+    this.idToResolve[ data.__deputyProcessId ]( data );
     delete this.idToResolve[ data.__deputyProcessId ];
-    delete this.idToReject[ data.__deputyProcessId ];
   }
 }

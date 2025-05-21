@@ -622,9 +622,9 @@ export default class DatabaseClient extends GraphServerClient {
       );
 
       await client.query(
-        `INSERT INTO task_execution(uuid, routine_execution_id, task_id, context_id, created) VALUES ($1, $2, $3, $4, $5) 
+        `INSERT INTO task_execution(uuid, routine_execution_id, task_id, context_id, split_group, created) VALUES ($1, $2, $3, $4, $5, $6) 
          ON CONFLICT ON CONSTRAINT task_execution_pkey DO NOTHING;`,
-        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id, this.formatTimestamp( _data.__scheduled ) ],
+        [ _data.__id, _data.__graphId, _data.__task.__id, _data.__context.__id, _data.__splitGroupId, this.formatTimestamp( _data.__scheduled ) ],
       );
 
       for ( const prevId of data.__previousNodes ) {
@@ -649,7 +649,7 @@ export default class DatabaseClient extends GraphServerClient {
     if ( data.__isUnique ) {
       await this.query(
         `INSERT INTO context (uuid, context) VALUES ($1, $2) ON CONFLICT ON CONSTRAINT context_pkey DO NOTHING;`,
-        [ data.__context.__id, { __joinedContext: data.__context.__context } ],
+        [ data.__context.__id, data.__context.__context ],
       );
     }
 

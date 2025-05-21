@@ -36,7 +36,7 @@ export default class DeputyMessageHandler extends MessageHandler {
         break;
 
       case 'Resolved deputy task':
-        server.dispatch( data, 'userAgent', 'resolveProcess' );
+        server.dispatch( data, 'userAgentManager', 'resolveProcess' );
         break;
 
       case 'Added deputy task to manager':

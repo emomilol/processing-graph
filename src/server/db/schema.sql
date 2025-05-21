@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS task_execution (
     task_id UUID REFERENCES task(uuid) ON DELETE NO ACTION NOT NULL,
     context_id UUID REFERENCES context(uuid) ON DELETE NO ACTION NOT NULL,
     result_context_id UUID REFERENCES context(uuid) ON DELETE NO ACTION DEFAULT NULL,
+    split_group UUID DEFAULT NULL,
     is_scheduled BOOLEAN DEFAULT TRUE,
     is_running BOOLEAN DEFAULT FALSE,
     is_complete BOOLEAN DEFAULT FALSE,

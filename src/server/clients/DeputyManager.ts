@@ -17,12 +17,12 @@ export default class DeputyManager extends GraphServerClient {
     return this.instance_;
   }
 
-  private loadBalancer: LoadBalancer;
-
   protected constructor() {
     super();
     this.loadBalancer = new LoadBalancer();
   }
+
+  private loadBalancer: LoadBalancer;
 
   private deputyTasks: Map<string, DeputyTask> = new Map<string, DeputyTask>();
 

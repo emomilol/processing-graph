@@ -93,14 +93,24 @@ export default class GraphServer extends EventBroker {
 
   start() {
     if ( this.server ) {
-      this.init();
       let port = this.port;
       if ( GraphServerCluster.isWorker() ) {
         port = 0;
       }
       this.server.listen( port, () => {
+        if ( typeof this.server?.address() === 'string' ) {
+          this.address = ( this.server.address() as string );
+          // @ts-ignore
+        } else if (this.server?.address()?.address === '::') {
+          this.address = 'localhost';
+        } else {
+          // @ts-ignore
+          this.address = ( this.server?.address()?.address || '' );
+        }
         console.log( `Server is running on ${ this.address }:${ this.port }` );
+        this.init();
       } );
+
     }
   }
 

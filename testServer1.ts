@@ -27,11 +27,10 @@ function* splitTaskFunction( context: AnyObject ) {
   }
 }
 
-async function joinFunction( context: AnyObject[] ) {
-  await new Promise( resolve => setTimeout( resolve, 1000 ) );
-  const newContext = { ...context[ 0 ] };
+function joinFunction( context: AnyObject ) {
+  const newContext = { ...context.joinedContexts[ 0 ] };
   let count = 1;
-  for ( const ctx of context ) {
+  for ( const ctx of context.joinedContexts ) {
     count += ctx.count;
   }
 
@@ -48,17 +47,17 @@ async function main() {
   //   return;
   // }
 
-  const task1 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 1' );
+  const task1 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 1', 'This is task 1', 0 );
   const task2 = ProcessingGraph.createTask( splitTaskFunction, 'Task 2' );
   const task3 = ProcessingGraph.createTask( syncTaskFunction, 'Task 3' );
-  const task4 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 4' );
-  const task5 = ProcessingGraph.createDeputyTask( 'Routine 5', 'Service 3' );
+  const task4 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 4', 'This is task 4', 0 );
+  const task5 = ProcessingGraph.createDeputyTask( 'Routine 5', 'Service 3', 1 );
   const task6 = ProcessingGraph.createUniqueTask( joinFunction, 'Task 6' );
   const task7 = ProcessingGraph.createTask( syncTaskFunction, 'Task 7' );
   const task8 = ProcessingGraph.createTask( syncTaskFunction, 'Task 8' );
   const task9 = ProcessingGraph.createTask( syncTaskFunction, 'Task 9' );
-  const task10 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 10' );
-  const task11 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 11' );
+  const task10 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 10', 'This is task 10', 1 );
+  const task11 = ProcessingGraph.createTask( asyncTaskFunction, 'Task 11', 'This is task 11', 0 );
 
   task2.doAfter( task1 );
   task3.doAfter( task2 );

@@ -119,6 +119,8 @@ export default class SocketServer extends Api {
       callback( responseData );
       delete this.pendingCallbacks[ data.__graphId ];
       this.forwardToServer( 'Resolved socket callback', data );
+    } else {
+      console.error( 'No callback found for socket response', data, this.pendingCallbacks, context.getFullContext() );
     }
   }
 }

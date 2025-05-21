@@ -4,85 +4,166 @@ import GraphRegistry from '../server/GraphRegistry';
 
 
 export default class AsyncGraphLayer extends GraphLayer {
+  /*
+  * The nodesQueuedByTask array is a 2D array of arrays.
+  * The first dimension represents the task.
+  * The second dimension separates the available nodes from the waiting nodes.
+  *
+  * Example:
+  *
+  * nodesQueuedByTask = [
+  *   [ // Task 1
+  *     [ // Available nodes
+  *       node1,
+  *       node2,
+  *     ],
+  *     [ // Waiting nodes
+  *       node3,
+  *       node4,
+  *       node9,
+  *       node10,
+  *     ],
+  *   ],
+  *   [ // Task 2
+  *     [ // Available nodes
+  *       node5,
+  *       node6,
+  *     ],
+  *     [ // Waiting nodes
+  *       node7,
+  *       node8,
+  *       node11,
+  *       node12,
+  *     ],
+  *   ]
+  * ]
+  *
+  * The nodesQueuedByTask array is used to keep track of the nodes that are waiting to be processed.
+  * */
+  protected nodesQueuedByTask: GraphNode[][][] = [];
+  protected nodesGroupedByGraph: { [ graphId: string ]: GraphNode[] } = {};
+  protected nodeResultsGroupedByGraph: { [ graphId: string ]: (Promise<GraphNode[]> | GraphNode[])[] } = {};
+
+  add( node: GraphNode ) {
+    if ( !this.shouldAdd( node ) ) {
+      return;
+    }
+
+    this.nodes.push( node );
+    this.addToTaskQueue( node );
+    this.addToGraphGroup( node );
+
+    this.report( 'Scheduled node', { ...node.lightExport(), __scheduled: Date.now() } );
+  }
 
   process() {
-    this.start();
+    for ( const taskQueue of this.nodesQueuedByTask ) {
+      const front = taskQueue[ 0 ];
+
+      while ( front.length ) {
+        const node = front.shift() as GraphNode;
+        this.addToResultGraphGroup( node.graphId, this.processNode( node ) );
+      }
+    }
+
+    // Remove empty task queues
+    for ( let i = this.nodesQueuedByTask.length - 1; i >= 0; i-- ) {
+      const taskQueue = this.nodesQueuedByTask[ i ];
+      const back = taskQueue[ 1 ];
+      if ( back.length === 0 ) {
+        this.nodesQueuedByTask.splice( i, 1 );
+      }
+    }
 
     const result: (Promise<GraphNode[]> | GraphNode[])[][] = [];
 
-    const nextNodesGenerator = this.getNextNodes();
-    for ( const nextNodesPromises of nextNodesGenerator ) {
-      result.push( nextNodesPromises );
-    }
-
-    if ( this.isProcessed() ) {
-      this.end();
+    for ( const graphId of Object.keys( this.nodeResultsGroupedByGraph ) ) {
+      const group = this.nodeResultsGroupedByGraph[ graphId ];
+      if ( group.length === this.nodesGroupedByGraph[ graphId ].length ) {
+        result.push( this.nodeResultsGroupedByGraph[ graphId ] );
+        delete this.nodeResultsGroupedByGraph[ graphId ];
+        delete this.nodesGroupedByGraph[ graphId ];
+      }
     }
 
     return result;
   }
 
-  *getNextNodes(): Generator<(Promise<GraphNode[]> | GraphNode[])[]> {
-    const taskConcurrency: GraphNode[][] = [];
-    const groupedNodes: GraphNode[][] = []
-    for ( const node of this.nodes ) {
-      if ( node.isProcessed() ) {
-        continue;
+  isProcessed() {
+    return false;
+  }
+
+  addToTaskQueue( node: GraphNode ) {
+    const taskQueue = this.nodesQueuedByTask.find(
+      taskQueue =>
+        ( taskQueue[ 0 ].length && taskQueue[ 0 ][ 0 ].sharesTaskWith( node ) ) ||
+        ( taskQueue[ 1 ].length && taskQueue[ 1 ][ 0 ].sharesTaskWith( node ) ),
+    );
+
+    if ( taskQueue ) {
+      const front = taskQueue[ 0 ];
+      const back = taskQueue[ 1 ];
+
+      if ( front.length ) {
+        if ( node.getConcurrency() === 0 ) {
+          front.push( node );
+
+        } else {
+          if ( front.length < node.getConcurrency() && back.length === 0 ) {
+            front.push( node );
+          } else {
+            back.push( node );
+          }
+        }
+
+      } else if ( back.length ) {
+        back.push( node );
       }
 
-      if ( node.isProcessing() ) {
-        if ( node.getConcurrency() > 0 ) {
-          let newTask = true;
-          for ( const taskNodes of taskConcurrency ) {
-            if ( taskNodes[ 0 ].sharesTaskWith( node ) ) {
-              taskNodes.push( node );
-              newTask = false;
-              break;
-            }
-          }
+    } else {
+      this.nodesQueuedByTask.push( [ [ node ], [] ] );
+    }
+  }
 
-          if ( newTask ) {
-            taskConcurrency.push( [ node ] );
+  shiftTaskQueue( node: GraphNode ) {
+    const taskQueue = this.nodesQueuedByTask.find(
+      taskQueue =>
+        ( taskQueue[ 0 ].length && taskQueue[ 0 ][ 0 ].sharesTaskWith( node ) ) ||
+        ( taskQueue[ 1 ].length && taskQueue[ 1 ][ 0 ].sharesTaskWith( node ) ),
+    );
+
+    if ( taskQueue ) {
+      const front = taskQueue[ 0 ];
+      const back = taskQueue[ 1 ];
+
+      if ( back.length ) {
+        if ( node.getConcurrency() === 0 ) {
+          while ( back.length ) {
+            const node = back.shift() as GraphNode;
+            front.push( node );
           }
+        } else if ( front.length < node.getConcurrency() ) {
+          const node = back.shift() as GraphNode;
+          front.push( node );
         }
       }
     }
+  }
 
-    for ( const node of this.nodes ) {
-      if ( node.isProcessed() || node.isProcessing() ) {
-        continue;
-      }
-
-      if ( node.getConcurrency() > 0 ) {
-        let skip = false;
-        for ( const taskNodes of taskConcurrency ) {
-          if ( taskNodes[ 0 ].sharesTaskWith( node ) && taskNodes.length >= node.getConcurrency() ) {
-            skip = true;
-            break;
-          }
-        }
-
-        if ( skip ) {
-          continue;
-        }
-      }
-
-      let addedToGroup = false;
-      for ( const group of groupedNodes ) {
-        if ( group[ 0 ].isPartOfSameGraph( node ) ) {
-          group.push( node );
-          addedToGroup = true;
-          break;
-        }
-      }
-
-      if ( !addedToGroup ) {
-        groupedNodes.push( [ node ] );
-      }
+  addToGraphGroup( node: GraphNode ) {
+    if ( this.nodesGroupedByGraph[ node.graphId ] ) {
+      this.nodesGroupedByGraph[ node.graphId ].push( node );
+    } else {
+      this.nodesGroupedByGraph[ node.graphId ] = [ node ];
     }
+  }
 
-    for ( const group of groupedNodes ) {
-      yield group.map( node => this.processNode( node ) );
+
+  addToResultGraphGroup( graphId: string, result: Promise<GraphNode[]> | GraphNode[] ) {
+    if ( this.nodeResultsGroupedByGraph[ graphId ] ) {
+      this.nodeResultsGroupedByGraph[ graphId ].push( result );
+    } else {
+      this.nodeResultsGroupedByGraph[ graphId ] = [ result ];
     }
   }
 
@@ -120,6 +201,9 @@ export default class AsyncGraphLayer extends GraphLayer {
     }
 
     this.report( 'Node processed', nodeData );
+    this.nodes.splice( this.nodes.indexOf( node ), 1 );
+    this.shiftTaskQueue( node );
+
     if ( node.graphDone() ) {
       GraphRegistry.instance.updateSelf( nodeData );
       this.report( 'Graph completed', nodeData );

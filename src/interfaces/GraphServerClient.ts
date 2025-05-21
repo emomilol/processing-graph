@@ -10,7 +10,11 @@ export default abstract class GraphServerClient {
     this.server?.forward( event, data, this );
   }
 
-  connectToServer( server: EventBroker ) {
+  connectToServer( server: EventBroker | undefined ) {
+    if ( server === undefined ) {
+      console.warn( 'Server not set on client!', this );
+      return;
+    }
     this.server = server;
   }
 

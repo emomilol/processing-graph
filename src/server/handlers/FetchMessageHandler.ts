@@ -27,9 +27,6 @@ export default class FetchMessageHandler extends MessageHandler {
   handleMessage( message: string, data: AnyObject, server: EventBroker ) {
     switch ( message ) {
       case 'Server overloaded':
-        server.dispatch( data, 'deputyManager', 'resolveDeputyTask' );
-        break;
-
       case 'Remote graph complete':
       case 'Remote graph errored':
       case 'Timeout error on running remote graph':
