@@ -154,6 +154,8 @@ export default class DatabaseClient extends GraphServerClient {
   }
 
   async getServers( data: AnyObject ) {
+    await this.query( schema ); // Set up database
+
     const servers = await this.query(
       `SELECT uuid, address, port, processing_graph, process_pid, is_active FROM server WHERE is_primary = TRUE;`,
     );
@@ -225,8 +227,6 @@ export default class DatabaseClient extends GraphServerClient {
     }
 
     const updatedData = await this.makeTransaction( data, async ( client: PoolClient, _data: AnyObject ) => {
-      await client.query( schema ); // Set up database
-
       const res = await client.query(
         `INSERT INTO processing_graph as p (name, description, created) VALUES ($1, $2, $3)
                                                 ON CONFLICT ON CONSTRAINT processing_graph_pkey DO UPDATE SET description = $2, modified = DEFAULT
