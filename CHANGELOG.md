@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/emomilol/processing-graph/compare/v2.0.1...v2.1.0) (2025-05-22)
+
+
+### Features
+
+* The all queries will wait for the database to get available. ([3174ef3](https://github.com/emomilol/processing-graph/commit/3174ef35ea66d13086d18d972127de1e293648ec))
+
 ## [2.0.1](https://github.com/emomilol/processing-graph/compare/v2.0.0...v2.0.1) (2025-05-22)
 
 
