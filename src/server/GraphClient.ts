@@ -99,6 +99,7 @@ export default class GraphClient extends EventBroker {
 
   schedule() {
     setInterval( () => {
+      this.dispatch( {}, 'databaseClient', 'getServers' );
       this.dispatch( {}, 'databaseClient', 'getRoutines' );
     }, 30000 );
   }
