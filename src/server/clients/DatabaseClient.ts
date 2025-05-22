@@ -46,11 +46,8 @@ export default class DatabaseClient extends GraphServerClient {
   }
 
   private async query( query:string, params?: any[] ) {
-    // const start = Date.now();
-    // const res = await this.pool.query( query, params );
-    // const duration = Date.now() - start;
-    // console.log( 'executed query', { query, duration, rows: res.rowCount } );
-    return await this.pool.query( query, params ); // res
+    const transaction = ( client: PoolClient, data: AnyObject ) => client.query( query, data.params );
+    return await this.waitForDatabase( transaction, this.pool, { params } );
   }
 
   private async makeTransaction( data: AnyObject, transaction: ( client: PoolClient, context: AnyObject ) => Promise<AnyObject> ): Promise<AnyObject> {
@@ -59,7 +56,7 @@ export default class DatabaseClient extends GraphServerClient {
     try {
       await client.query( 'BEGIN' );
 
-      context = await transaction( client, data );
+      context = await this.waitForDatabase( transaction, client, data );
 
       await client.query('COMMIT');
     } catch ( e ) {
@@ -70,6 +67,23 @@ export default class DatabaseClient extends GraphServerClient {
     }
 
     return context ?? data;
+  }
+
+  async waitForDatabase(transaction: ( client: any, context: AnyObject ) => Promise<AnyObject>, client: any, context: AnyObject ) {
+    for (let i = 0; i < 10; i++) {
+      try {
+        return await transaction( client, context );
+      } catch (err: unknown) {
+        if ( err && (err as Error ).message.includes('does not exist') ) {
+          console.log(`Waiting for database to be ready...`);
+          await new Promise((res) => setTimeout(res, 1000));
+        } else {
+          console.error('Database query errored: ', err, context);
+          return { rows: [] };
+        }
+      }
+    }
+    throw new Error(`Timeout waiting for database to be ready`);
   }
 
   dispatch( data: AnyObject, action: string ) {
