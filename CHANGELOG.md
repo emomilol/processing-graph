@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/emomilol/processing-graph/compare/v2.0.0...v2.0.1) (2025-05-22)
+
+
+### Bug Fixes
+
+* Setting up of database now happens on the getServers call since it is the first call of every server and agent. ([3369dd6](https://github.com/emomilol/processing-graph/commit/3369dd647b41d70e0408df9058388d56343d1435))
+
 # [2.0.0](https://github.com/emomilol/processing-graph/compare/v1.2.0...v2.0.0) (2025-05-21)
 
 
