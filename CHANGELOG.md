@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/emomilol/processing-graph/compare/v2.1.0...v2.2.0) (2025-05-22)
+
+
+### Features
+
+* Agents are now polling for servers regularly. ([3cc482d](https://github.com/emomilol/processing-graph/commit/3cc482dbf1a322a848eacea14a6ea85ee2fe2ad5))
+
 # [2.1.0](https://github.com/emomilol/processing-graph/compare/v2.0.1...v2.1.0) (2025-05-22)
 
 
