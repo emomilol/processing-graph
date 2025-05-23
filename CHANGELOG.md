@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/emomilol/processing-graph/compare/v2.2.0...v2.2.1) (2025-05-23)
+
+
+### Bug Fixes
+
+* Fixed address to not default to localhost in production ([d975a69](https://github.com/emomilol/processing-graph/commit/d975a693b95635add005e5a46eb0b1ff9277f1bd))
+
 # [2.2.0](https://github.com/emomilol/processing-graph/compare/v2.1.0...v2.2.0) (2025-05-22)
 
 
