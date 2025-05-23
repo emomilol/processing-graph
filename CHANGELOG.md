@@ -1,3 +1,10 @@
+## [2.2.2](https://github.com/emomilol/processing-graph/compare/v2.2.1...v2.2.2) (2025-05-23)
+
+
+### Bug Fixes
+
+* Fixed address not set correctly when docker contained ([82bb7e8](https://github.com/emomilol/processing-graph/commit/82bb7e833fa32ccd125d1f6cefb54a9aed3b1544))
+
 ## [2.2.1](https://github.com/emomilol/processing-graph/compare/v2.2.0...v2.2.1) (2025-05-23)
 
 
