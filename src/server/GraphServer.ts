@@ -102,7 +102,11 @@ export default class GraphServer extends EventBroker {
           this.address = ( this.server.address() as string );
           // @ts-ignore
         } else if (this.server?.address()?.address === '::') {
-          this.address = 'localhost';
+          if (process.env.NODE_ENV === 'development') {
+            this.address = 'localhost';
+          } else {
+            this.address = '::';
+          }
         } else {
           // @ts-ignore
           this.address = ( this.server?.address()?.address || '' );
