@@ -104,8 +104,8 @@ export default class GraphServer extends EventBroker {
         } else if (this.server?.address()?.address === '::') {
           if (process.env.NODE_ENV === 'development') {
             this.address = 'localhost';
-          } else {
-            this.address = '::';
+          } else if (process.env.IS_DOCKER === 'true') {
+            this.address = process.env.PG_GRAPH_SERVER_URL || 'localhost';
           }
         } else {
           // @ts-ignore
